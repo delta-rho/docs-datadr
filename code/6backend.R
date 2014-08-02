@@ -7,7 +7,7 @@ irisKV <- list(
 
 
 
-# initialize a "ddf" object from irisKV
+# initialize a ddf from irisKV
 irisDdf <- ddf(irisKV)
 
 
@@ -18,15 +18,13 @@ bySpecies <- divide(irisDdf,
 
 
 
+# transform bySpecies to a data frame of lm coefficients
+bySpeciesLm <- addTransform(bySpecies, function(x) {
+   coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
+   data.frame(slope = coefs[2], intercept = coefs[1])
+})
 # compute lm coefficients for each division and rbind them
-recombine(bySpecies, 
-   apply = function(x) {
-      coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
-      data.frame(slope = coefs[2], intercept = coefs[1])
-   },
-   combine = combRbind())
-
-
+recombine(bySpeciesLm, combRbind)
 
 
 
@@ -55,16 +53,14 @@ top5[[1]]
 
 
 
-
-
 # remove files if necessary
-try(unlink("/private/tmp/irisKV", recursive=TRUE))
-try(unlink("/private/tmp/bySpecies", recursive=TRUE))
+try(unlink(file.path(tempdir(), "irisKV"), recursive=TRUE))
+try(unlink(file.path(tempdir(), "irisKV"), recursive=TRUE))
 
 
 
-# initiate a disk connection to a new directory /private/tmp/irisKV
-irisDiskConn <- localDiskConn("/private/tmp/irisKV", autoYes = TRUE)
+# initiate a disk connection to a new directory /__tempdir__/irisKV
+irisDiskConn <- localDiskConn(file.path(tempdir(), "irisKV"), autoYes = TRUE)
 
 
 
@@ -73,7 +69,7 @@ irisDiskConn
 
 
 
-irisDiskConn <- localDiskConn("/private/tmp/irisKV")
+irisDiskConn <- localDiskConn(file.path(tempdir(), "irisKV"))
 
 
 
@@ -96,7 +92,7 @@ addData(irisDiskConn, irisKV[3])
 
 
 
-# initialize a "ddf" object from irisDiskConn
+# initialize a ddf from irisDiskConn
 irisDdf <- ddf(irisDiskConn)
 
 
@@ -114,7 +110,7 @@ irisDdf <- updateAttributes(irisDdf)
 # divide local disk data by species
 bySpecies <- divide(irisDdf, 
    by = "Species",
-   output = localDiskConn("/private/tmp/bySpecies", autoYes = TRUE),
+   output = localDiskConn(file.path(tempdir(), "bySpecies"), autoYes = TRUE),
    update = TRUE)
 
 
@@ -122,28 +118,26 @@ bySpecies <- divide(irisDdf,
 # remove the R object "bySpecies"
 rm(bySpecies)
 # now reinitialize
-bySpecies <- ddf(localDiskConn("/private/tmp/bySpecies"))
+bySpecies <- ddf(localDiskConn(file.path(tempdir(), "bySpecies")))
 
 
 
+# transform bySpecies to a data frame of lm coefficients
+bySpeciesLm <- addTransform(bySpecies, function(x) {
+   coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
+   data.frame(slope = coefs[2], intercept = coefs[1])
+})
 # compute lm coefficients for each division and rbind them
-recombine(bySpecies, 
-   apply = function(x) {
-      coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
-      data.frame(slope = coefs[2], intercept = coefs[1])
-   },
-   combine = combRbind())
+recombine(bySpeciesLm, combRbind)
 
 
 
-str(bySpecies[[1]])
-str(bySpecies[["Species=setosa"]])
+bySpecies[[1]]
+bySpecies[["Species=setosa"]]
 
 
 
 getKeys(bySpecies)
-
-
 
 
 
@@ -197,8 +191,6 @@ counters(top5a)$map$mapTasks
 
 
 
-
-
 library(Rhipe)
 rhinit()
 
@@ -206,12 +198,24 @@ rhinit()
 
 # list files in the base directory of HDFS
 rhls("/")
+
+
+
 # make a directory /tmp/testfile
 rhmkdir("/tmp/testfile")
+
+
+
 # write a couple of key-value pairs to /tmp/testfile/1
 rhwrite(list(list(1, 1), list(2, 2)), file = "/tmp/testfile/1")
+
+
+
 # read those values back in
 a <- rhread("/tmp/testfile/1")
+
+
+
 # create an R object and save a .Rdata file containing it to HDFS
 d <- rnorm(10)
 rhsave(d, file = "/tmp/testfile/d.Rdata")
@@ -219,27 +223,25 @@ rhsave(d, file = "/tmp/testfile/d.Rdata")
 rhload("/tmp/testfile/d.Rdata")
 # list the files in /tmp/testfile
 rhls("/tmp/testfile")
+
+
+
 # set the HDFS working directory (like R's setwd())
 hdfs.setwd("/tmp/testfile")
 # now commands like rhls() go on paths relative to the HDFS working directory
 rhls()
+
+
+
 # change permissions of /tmp/testfile/1
 rhchmod("1", 777)
 # see how permissions chagned
 rhls()
+
+
+
 # delete everything we just did
 rhdel("/tmp/testfile")
-
-
-
-
-
-# remove files if necessary
-try(rhdel("/tmp/irisKV"))
-try(rhdel("/tmp/bySpecies"))
-try(rhdel("/tmp/adultDdf"))
-try(rhdel("/tmp/adult_raw_data"))
-try(unlink("/private/tmp/irisKVdisk", recursive = TRUE))
 
 
 
@@ -262,7 +264,7 @@ addData(irisHDFSconn, irisKV)
 
 
 
-# initialize a "ddf" object from hdfsConn
+# initialize a ddf from hdfsConn
 irisDdf <- ddf(irisHDFSconn)
 irisDdf
 
@@ -286,24 +288,22 @@ bySpecies <- ddf(hdfsConn("/tmp/bySpecies"))
 
 
 
+# transform bySpecies to a data frame of lm coefficients
+bySpeciesLm <- addTransform(bySpecies, function(x) {
+   coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
+   data.frame(slope = coefs[2], intercept = coefs[1])
+})
 # compute lm coefficients for each division and rbind them
-recombine(bySpecies, 
-   apply = function(x) {
-      coefs <- coef(lm(Sepal.Length ~ Petal.Length, data=x))
-      data.frame(slope=coefs[2], intercept=coefs[1])
-   },
-   combine = combRbind())
+recombine(bySpeciesLm, combRbind)
 
 
 
-
-
-str(bySpecies[[1]])
-str(bySpecies[["Species=setosa"]])
+bySpecies[[1]]
+bySpecies[["Species=setosa"]]
 
 
 
-str(irisDdf[["key1"]])
+irisDdf[["key1"]]
 
 
 
@@ -312,9 +312,7 @@ irisDdf <- makeExtractable(irisDdf)
 
 
 
-str(irisDdf[["key1"]])
-
-
+irisDdf[["key1"]]
 
 
 
@@ -344,64 +342,6 @@ top5[[1]]
 
 
 
-
-
-# write adult data to csv file
-write.table(adult, 
-   row.names=FALSE, col.names=FALSE, 
-   sep=",", quote=FALSE, 
-   file="/tmp/adult.csv")
-
-
-
-# create /tmp/adult_raw_data directory on HDFS
-rhmkdir("/tmp/adult_raw_data")
-# copy the csv from local disk to this directory on HDFS
-rhput("/tmp/adult.csv", "/tmp/adult_raw_data/adult.csv")
-# make sure it is there
-rhls("/tmp/adult_raw_data")
-
-
-
-# connect to the csv file on HDFS
-adultConn <- hdfsConn("/tmp/adult_raw_data", type="text")
-# initialize ddo object
-adultDdo <- ddo(adultConn)
-# look at a key-value pair
-adultDdo[[1]]
-
-
-
-# transformation function to turn line of csv text into data frame
-adult2df <- function(line) {
-   read.table(textConnection(line), sep = ",", 
-      header = FALSE,
-      col.names = c("age", "workclass", "fnlwgt", "education", "educationnum", 
-         "marital", "occupation", "relationship", "race", "sex", "capgain", 
-         "caploss", "hoursperweek", "nativecountry", "income", "incomebin"),
-         stringsAsFactors=FALSE
-   )
-}
-
-
-
-adultDdf <- ddf(adultConn, transFn = adult2df)
-
-
-
-
-
-kvExample(adultDdf, transform = TRUE)
-
-
-
-
-
-byEd <- divide(adultDdf, by = "education", 
-   output = hdfsConn("/tmp/adultDdf", autoYes = TRUE))
-
-
-
 rhipeControl()
 
 
@@ -412,7 +352,7 @@ irisDdf <- ddo(hdfsConn("/tmp/irisKV"))
 irisDdfMem <- convert(from = irisDdf)
 # convert from HDFS to local disk ddf
 irisDdfDisk <- convert(from = irisDdf, 
-   to=localDiskConn("/private/tmp/irisKVdisk", autoYes=TRUE))
+   to = localDiskConn(file.path(tempdir(), "irisKVdisk"), autoYes=TRUE))
 
 
 
@@ -424,16 +364,13 @@ system(paste("head", csvFile))
 
 
 
-# read chunks of the csv file in, process them, 
-# and store them in a local disk connection
-irisTextConn <- localDiskConn(file.path(tempdir(), "irisText"), autoYes = TRUE)
-a <- readTextFileByChunk(input = csvFile, 
-   output = irisTextConn, linesPerBlock = 10, 
-   fn = function(x, header) {
-      colNames <- strsplit(header, ",")[[1]]
-      read.csv(textConnection(paste(x, collapse = "\n")), 
-         col.names = colNames, header = FALSE)
-   })
-a[[1]]
+# connection for where to store output
+irisConn <- localDiskConn(file.path(tempdir(), "iris"), autoYes = TRUE)
+# read in iris data
+irisData <- drRead.csv(csvFile, rowsPerBlock = 20, output = irisConn)
+# look at resulting object
+irisData
+# look at a subset
+irisData[[1]]
 
 

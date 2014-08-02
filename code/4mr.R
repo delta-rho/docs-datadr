@@ -2,16 +2,7 @@
 
 # split iris data randomly into 4 key-value pairs
 set.seed(1234)
-ind <- split(sample(1:150), sample(1:4, 150, replace = TRUE))
-irisRKV <- lapply(seq_along(ind), function(i) {
-   list(i, iris[ind[[i]], c("Petal.Length", "Species")])
-})
-str(irisRKV)
-
-
-
-# represent irisRKV as a distributed data frame
-irisRddf <- ddf(irisRKV)
+irisRR <- divide(iris, by = rrDiv(nrows = 40))
 
 
 
@@ -43,7 +34,7 @@ maxReduce <- expression(
 
 
 # execute the job
-maxRes <- mrExec(irisDdf,
+maxRes <- mrExec(irisRR,
    map = maxMap,
    reduce = maxReduce
 )
@@ -95,7 +86,7 @@ meanReduce <- expression(
 
 
 # execute the job
-meanRes <- mrExec(irisRddf,
+meanRes <- mrExec(irisRR,
    map = meanMap,
    reduce = meanReduce
 )
@@ -126,7 +117,7 @@ meanMap2 <- expression({
 
 
 
-meanRes <- mrExec(irisRddf,
+meanRes <- mrExec(irisRR,
    setup = setup,
    map = meanMap2,
    reduce = meanReduce
@@ -145,7 +136,7 @@ meanMap3 <- expression({
    })
 })
 
-meanRes <- mrExec(irisRddf,
+meanRes <- mrExec(irisRR,
    setup = setup,
    map = meanMap3,
    reduce = meanReduce,
@@ -156,7 +147,7 @@ meanRes <- mrExec(irisRddf,
 
 meanMap4 <- expression({
    counter("counterTest", "mapValuesProcessed", length(map.values))
-
+   
    v <- do.call(rbind, map.values)
    dlply(v, .(Species), function(x) {
       collect(
@@ -165,7 +156,7 @@ meanMap4 <- expression({
    })
 })
 
-meanRes <- mrExec(irisRddf,
+meanRes <- mrExec(irisRR,
    setup = setup,
    map = meanMap4,
    reduce = meanReduce,

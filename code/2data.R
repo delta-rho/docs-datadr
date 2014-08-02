@@ -6,28 +6,20 @@ list(1:5, rnorm(10))
 
 
 # create by-species key-value pairs
-irisKV <- list(
-   list("setosa", subset(iris, Species == "setosa")[,c(1:2, 5)]),
-   list("versicolor", subset(iris, Species == "versicolor")[,c(1:2, 5)]),
-   list("virginica", subset(iris, Species == "virginica")[,c(1:2, 5)])
+irisKV <- kvPairs(
+   list("setosa", subset(iris, Species == "setosa")),
+   list("versicolor", subset(iris, Species == "versicolor")),
+   list("virginica", subset(iris, Species == "virginica"))
 )
-str(irisKV)
+irisKV
 
 
 
-# kvApply example operating on just value
-meanSepalLength1 <- function(v)
-   mean(v$Sepal.Length)
-   
-kvApply(meanSepalLength1, irisKV[[1]])
-
-
-
-# kvApply example operating on key and value
-meanSepalLength2 <- function(k, v)
-   data.frame(species = k, mean = mean(v$Sepal.Length))
-   
-kvApply(meanSepalLength2, irisKV[[1]])
+irisKV <- kvPairs(
+   list("setosa", subset(iris, Species == "setosa")),
+   list("versicolor", subset(iris, Species == "versicolor")),
+   list("virginica", subset(iris, Species == "virginica"))
+)
 
 
 
@@ -58,7 +50,8 @@ irisDdo
 
 par(mar = c(4.1, 4.1, 1, 0.2))
 # plot distribution of the size of the key-value pairs
-plot(splitSizeDistn(irisDdo))
+qplot(y = splitSizeDistn(irisDdo), 
+   xlab = "percentile", ylab = "subset size (kb)")
 
 
 
@@ -67,13 +60,13 @@ irisDdo <- ddo(irisKV, update = TRUE)
 
 
 
-str(irisDdo[["setosa"]])
-str(irisDdo[[1]])
+irisDdo[["setosa"]]
+irisDdo[[1]]
 
 
 
-str(irisDdo[c("setosa", "virginica")])
-str(irisDdo[1:2])
+irisDdo[c("setosa", "virginica")]
+irisDdo[1:2]
 
 
 
@@ -88,16 +81,22 @@ summary(irisDdf)
 
 
 
-summary(irisDdf)$Sepal.Length
+summary(irisDdf)$Sepal.Length$stats
 
 
 
-summary(irisDdf)$Species
+summary(irisDdf)$Species$freqTable
 
 
 
 nrow(irisDdf)
+
+
+
 ncol(irisDdf)
+
+
+
 names(irisDdf)
 
 
@@ -107,46 +106,51 @@ irisDf <- ddf(iris, update = TRUE)
 
 
 
-# example of some "less-structured" key-value pairs
-people <- list(
-   list("fred", 
-      list(age = 74, statesLived = c("NJ", "MA", "ND", "TX"))
-   ),
-   list("bob", 
-      list(age = 42, statesLived = "NJ")
-   )
+# iris ddf by Species
+irisKV <- kvPairs(
+   list("setosa", subset(iris, Species == "setosa")),
+   list("versicolor", subset(iris, Species == "versicolor")),
+   list("virginica", subset(iris, Species == "virginica"))
 )
+irisDdf <- ddf(irisKV)
 
 
 
-# cast first value as data frame
-as.data.frame(people[[1]][[2]])
+irisSL <- addTransform(irisDdf, function(x) mean(x$Sepal.Width))
 
 
 
-# ddf with transFn
-peopleDdf <- ddf(people, transFn = as.data.frame)
+meanSL <- function(x) mean(x$Sepal.Width)
+irisSL <- addTransform(irisDdf, meanSL)
 
 
 
-# ddf tries as.data.frame for transFn by default
-peopleDdf <- ddf(people)
+irisSL
 
 
 
-# get a ddf key-value pair with transFn applied
-kvExample(peopleDdf, transform = TRUE)
+irisSL[[1]]
 
 
 
-# data is still stored unstructured (pre transFn)
-kvExample(peopleDdf)
+# set a global variable
+globalVar <- 7
+# define a function that depends on this global variable
+meanSLplus7 <- function(x) mean(x$Sepal.Width) + globalVar
+# add this transformation to irisDdf
+irisSLplus7 <- addTransform(irisDdf, meanSLplus7)
+# look at the first key-value pair (invokes transformation)
+irisSLplus7[[1]]
+# remove globalVar
+rm(globalVar)
+# look at the first key-value pair (invokes transformation)
+irisSLplus7[[1]]
 
 
 
 # get the mean Sepal.Width for each key-value pair in irisDdf
 means <- drLapply(irisDdf, function(x) mean(x$Sepal.Width))
-# turn the resulting "ddo" object into a list
+# turn the resulting ddo into a list
 as.list(means)
 
 
@@ -156,7 +160,7 @@ drFilter(irisDdf, function(v) mean(v$Sepal.Width) < 3)
 
 
 
-# create two new "ddo" objects that contain sepal width and sepal length
+# create two new ddo objects that contain sepal width and sepal length
 sw <- drLapply(irisDdf, function(x) x$Sepal.Width)
 sl <- drLapply(irisDdf, function(x) x$Sepal.Length)
 
@@ -167,14 +171,7 @@ sw[[1]]
 
 
 # join sw and sl by key
-joinRes <- drJoin(Sepal.Width=sw, Sepal.Length=sl)
-# look at first key-value pair
-joinRes[[1]]
-
-
-
-# join sw and sl by key and turn the result into a data frame
-joinRes <- drJoin(Sepal.Width=sw, Sepal.Length=sl, postTransFn = as.data.frame)
+joinRes <- drJoin(Sepal.Width = sw, Sepal.Length = sl)
 # look at first key-value pair
 joinRes[[1]]
 

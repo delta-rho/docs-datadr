@@ -16,7 +16,7 @@ bySpecies <- divide(irisDdf, by = condDiv("Species"), update = TRUE)
 
 
 # look at a subset of bySpecies
-str(bySpecies[[1]])
+bySpecies[[1]]
 
 
 
@@ -43,48 +43,33 @@ byRandom
 
 par(mar = c(4.1, 4.1, 1, 0.2))
 # plot distribution of the number of rows in each subset
-plot(splitRowDistn(byRandom))
+qplot(y = splitRowDistn(byRandom),
+   xlab = "percentile", ylab = "number of rows in subset")
 
 
 
-getKeys(byRandom)
+head(getKeys(byRandom))
 
 
 
-# preTransFn to extract Sepal.Length from a value in a key-value pair
-extractSepalLength <- function(v)
-   v[, c("Sepal.Length", "Species")]
-# test it on a subset to make sure it is doing what we want
-head(kvApply(extractSepalLength, irisDdf[[1]]))
-# apply division with preTransFn
-bySpeciesSL <- divide(irisDdf, by = "Species", preTransFn = extractSepalLength)
+summary(bySpecies)$Sepal.Length$range
 
 
 
-# get summary statistics for Sepal.Length
-summary(bySpecies)$Sepal.Length
-
-
-
-
-
-# preTransFn to add a variable "slCut" of discretized Sepal.Length
-sepalLengthCut <- function(v) {
+irisDdfSlCut <- addTransform(irisDdf, function(v) {
    v$slCut <- cut(v$Sepal.Length, seq(0, 8, by = 1))
    v
-}
-# test it on a subset
-slCutTest <- kvApply(sepalLengthCut, irisDdf[[1]])
-head(slCutTest)
+})
+irisDdfSlCut[[1]]
+
+
+
 # divide on Species and slCut
-bySpeciesSL <- divide(irisDdf, by = c("Species", "slCut"), 
-   preTransFn = sepalLengthCut)
+bySpeciesSL <- divide(irisDdfSlCut, by = c("Species", "slCut"))
 
 
 
 bySpeciesSL[[3]]
-
-
 
 
 
@@ -110,22 +95,23 @@ bySpeciesFilter
 
 
 
-recombine(bySpecies, apply = function(v) mean(v$Petal.Width))
+irisDdf <- ddf(iris)
+bySpecies <- divide(irisDdf, by = "Species", update = TRUE)
 
 
 
-recombine(bySpecies, apply = function(v) mean(v$Petal.Width), comb = combRbind())
+# apply mean petal width transformation
+mpw <- addTransform(bySpecies, function(v) mean(v$Petal.Width))
+# recombine using the default combine=combCollect
+recombine(mpw)
 
 
 
-meanApply <- function(v) {
-   data.frame(mpw = mean(v$Petal.Width), mpl = mean(v$Petal.Length))
-}
-recombine(bySpecies, apply = meanApply, comb = combRbind())
+recombine(mpw, combRbind)
 
 
 
-recombine(bySpecies, apply = meanApply, comb = combDdo())
+recombine(mpw, combDdo)
 
 
 
@@ -145,7 +131,7 @@ dotplot(value ~ Freq, data = edTable)
 
 
 
-# make a preTransFn to group some education levels
+# make a transformation to group some education levels
 edGroups <- function(v) {
    v$edGroup <- as.character(v$education)
    v$edGroup[v$edGroup %in% c("1st-4th", "5th-6th")] <- "Some-elementary"
@@ -153,29 +139,35 @@ edGroups <- function(v) {
    v$edGroup[v$edGroup %in% c("10th", "11th", "12th")] <- "Some-HS"
    v
 }
+# test it
+adultDdfGroup <- addTransform(adultDdf, edGroups)
+adultDdfGroup[[1]]
 
 
 
 # divide by edGroup and filter out "Preschool"
-byEdGroup <- divide(adultDdf, by = "edGroup", 
-   preTransFn = edGroups, 
+byEdGroup <- divide(adultDdfGroup, by = "edGroup", 
    filterFn = function(x) x$edGroup[1] != "Preschool",
    update = TRUE)
 byEdGroup
 
 
 
-# tabulate number of people in each education group
-edGroupTable <- recombine(byEdGroup, apply = nrow, combine = combRbind())
+# add transformation to count number of people in each education group
+byEdGroupNrow <- addTransform(byEdGroup, function(x) nrow(x))
+# recombine into a data frame
+edGroupTable <- recombine(byEdGroupNrow, combRbind)
 edGroupTable
 
 
 
 # compute male/female ratio by education group
-sexRatio <- recombine(byEdGroup, apply = function(x) {
+byEdGroupSR <- addTransform(byEdGroup, function(x) {
    tab <- table(x$sex)
    data.frame(maleFemaleRatio = tab["Male"] / tab["Female"])
-}, combine = combRbind())
+})
+# recombine into a data frame
+sexRatio <- recombine(byEdGroupSR, combRbind)
 sexRatio
 
 
@@ -186,30 +178,28 @@ dotplot(edGroup ~ maleFemaleRatio, data = sexRatio)
 
 
 
-
-
 # fit a glm to the original adult data frame
 rglm <- glm(incomebin ~ educationnum + hoursperweek + sex, data = adult, family = binomial())
-summary(rglm)
+summary(rglm)$coefficients
 
 
 
-rrAdult <- divide(adultDdf, by = rrDiv(500), update = TRUE,
-   postTrans = function(x) 
+rrAdult <- divide(adultDdf, by = rrDiv(1000), update = TRUE,
+   postTransFn = function(x) 
       x[,c("incomebin", "educationnum", "hoursperweek", "sex")])
 
 
 
-recombine(
-   data = rrAdult, 
-   apply = drGLM(incomebin ~ educationnum + hoursperweek + sex, 
-      family = binomial()), 
-   combine = combMeanCoef())
+adultGlm <- addTransform(rrAdult, function(x) 
+   drGLM(incomebin ~ educationnum + hoursperweek + sex, 
+      data = x, family = binomial()))
+recombine(adultGlm, combMeanCoef)
 
 
 
-recombine(rrAdult,
-   apply = drBLB(
+# add bag of little bootstraps transformation
+adultBlb <- addTransform(rrAdult, function(x) {
+   drBLB(x, 
       statistic = function(x, weights)
          coef(glm(incomebin ~ educationnum + hoursperweek + sex, 
             data = x, weights = weights, family = binomial())),
@@ -217,10 +207,10 @@ recombine(rrAdult,
          quantile(x, c(0.05, 0.95)),
       R = 100,
       n = nrow(rrAdult)
-   ),
-   combine = combMean()
-)
-
-
+   )
+})
+# compute the mean of the resulting CI limits
+coefs <- recombine(adultBlb, combMean)
+matrix(coefs, ncol = 2, byrow = TRUE)
 
 

@@ -25,30 +25,21 @@ The map function and reduce function are user-defined.  The MapReduce engine tak
 
 #### Iris data (again)
 
-We will illustrate MapReduce by continuing to look at the `iris` data.  This time, we'll split it randomly into 4 key-value pairs:
+We will illustrate MapReduce by continuing to look at the iris data.  This time, we'll split it randomly into 4 key-value pairs:
 
-```{r iris_rkv}
+```{r iris_rkv, message=FALSE}
 # split iris data randomly into 4 key-value pairs
 set.seed(1234)
-ind <- split(sample(1:150), sample(1:4, 150, replace = TRUE))
-irisRKV <- lapply(seq_along(ind), function(i) {
-   list(i, iris[ind[[i]], c("Petal.Length", "Species")])
-})
-str(irisRKV)
+irisRR <- divide(iris, by = rrDiv(nrows = 40))
 ```
 
-All inputs and outputs to MapReduce jobs in `datadr` are "ddo" or "ddf" objects.  Hence, we turn `irisRKV` into a "ddf" object:
-
-```{r iris_r_ddf, message=FALSE}
-# represent irisRKV as a distributed data frame
-irisRddf <- ddf(irisRKV)
-```
+All inputs and outputs to MapReduce jobs in `datadr` are ddo or ddf objects.
 
 ### MapReduce with datadr ###
 
 MapReduce jobs are executed in `datadr` with a call to `mrExec()`.  The main inputs a user should be concerned with are:
 
-- `data`: an object of class "ddf" or "ddo"
+- `data`: a ddo/ddf
 - `map`: an R expression that is evaluated during the map stage
 - `reduce`: a vector of R expressions with names `pre`, `reduce`, and `post` that is evaluated during the reduce stage
 
@@ -59,7 +50,7 @@ Other inputs of interest are the following:
 - `control`: parameters specifying how the backend should handle things (most-likely parameters to rhwatch in RHIPE) -- see [Store/Compute Backends](#backend-choices)
 - `params`: a named list of parameters external to the input data that are needed in the map or reduce phases
 
-In `datadr`, the `map` and `reduce` must be specified by the user as an R expression.  An input dataset, which is a "ddo" or "ddf" object, 
+In `datadr`, the `map` and `reduce` must be specified by the user as an R expression.
 
 #### The `map` expression
 
@@ -131,14 +122,14 @@ tmp <- by(v, v$Species, function(x) {
 }) 
 -->
 
-The easiest way to illustrate MapReduce is through example.  Given the `irisRddf` data we just created, let's try a couple of computations:
+The easiest way to illustrate MapReduce is through example.  Given the `irisRR` data we just created, let's try a couple of computations:
 
 - Compute the global maximum `Petal.Length`
 - Compute the mean `Petal.Length` by species
 
 #### Global maximum `Petal.Length`
 
-Recall that `irisRddf` is a random partitioning of the `iris` data, split into 4 key-value pairs.  To compute the global maximum petal length, we simply need to compute the maximum petal length for each key-value pair in the map and then combine these maximums in the reduce and take the max of maxes.  To ensure that all of our maximum values computed in the map go to the same reduce task, we need to emit the same key each time we `collect()`.  We emit the key `"max"` each time.  This will ensure that even across multiple map processes, all results with emitted key `"max"` will be shuffled into the same reduce task, which will have `reduce.key = "max"`.  We write the map as follows:
+Recall that `irisRR` is a random partitioning of the iris data, split into 4 key-value pairs.  To compute the global maximum petal length, we simply need to compute the maximum petal length for each key-value pair in the map and then combine these maximums in the reduce and take the max of maxes.  To ensure that all of our maximum values computed in the map go to the same reduce task, we need to emit the same key each time we `collect()`.  We emit the key `"max"` each time.  This will ensure that even across multiple map processes, all results with emitted key `"max"` will be shuffled into the same reduce task, which will have `reduce.key = "max"`.  We write the map as follows:
 
 ```{r max_map}
 # map expression to emit max petal length for each k/v pair
@@ -171,13 +162,13 @@ We can execute the job with the following:
 
 ```{r max_exec, message=FALSE}
 # execute the job
-maxRes <- mrExec(irisDdf,
+maxRes <- mrExec(irisRR,
    map = maxMap,
    reduce = maxReduce
 )
 ```
 
-The output of `mrExec` is a "ddo" object.  Since we only output one key-value pair, and the key is `"globalMax"`, we can get the result with:
+The output of `mrExec` is a ddo.  Since we only output one key-value pair, and the key is `"globalMax"`, we can get the result with:
 
 ```{r max_result}
 # look at the result
@@ -252,7 +243,7 @@ The job is executed with:
 
 ```{r mean_exec, message=FALSE}
 # execute the job
-meanRes <- mrExec(irisRddf,
+meanRes <- mrExec(irisRR,
    map = meanMap,
    reduce = meanReduce
 )
@@ -325,7 +316,7 @@ meanMap2 <- expression({
 We can execute it with:
 
 ```{r mean_exec2, message=FALSE}
-meanRes <- mrExec(irisRddf,
+meanRes <- mrExec(irisRR,
    setup = setup,
    map = meanMap2,
    reduce = meanReduce
@@ -350,7 +341,7 @@ meanMap3 <- expression({
    })
 })
 
-meanRes <- mrExec(irisRddf,
+meanRes <- mrExec(irisRR,
    setup = setup,
    map = meanMap3,
    reduce = meanReduce,
@@ -385,7 +376,7 @@ For example, let's add a counter to our example job:
 ```{r counter_example, message=FALSE}
 meanMap4 <- expression({
    counter("counterTest", "mapValuesProcessed", length(map.values))
-
+   
    v <- do.call(rbind, map.values)
    dlply(v, .(Species), function(x) {
       collect(
@@ -394,7 +385,7 @@ meanMap4 <- expression({
    })
 })
 
-meanRes <- mrExec(irisRddf,
+meanRes <- mrExec(irisRR,
    setup = setup,
    map = meanMap4,
    reduce = meanReduce,

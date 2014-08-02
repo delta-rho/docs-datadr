@@ -1,22 +1,22 @@
 ```
 
-## Division-Agnostic Methods ##
+## Division-Independent Methods ##
 
 ### All-Data Computation ###
 
-While division and recombination methods focus on per-subset computation, there are times where we would like to compute statistics over the entire data set, regardless of division.  `datadr` provides a set of methods for division-agnostic computations.  Currently it supports tabulating data through a `drAggregate()` function, computing quantile estimates through a `drQuantile()` function (from which we can obtain other related quantities of interest, such as histograms, boxplots, etc.), and performing hexagonal binning of two quantitiative variables through a `drHexbin()` function.
+While division and recombination methods focus on per-subset computation, there are times where we would like to compute statistics over the entire data set, regardless of division.  `datadr` provides a set of methods for division-independent computations, meaning no matter how the data is divided, these methods will provide the same global summary of the data.  Currently it supports tabulating data through a `drAggregate()` function, computing quantile estimates through a `drQuantile()` function (from which we can obtain other related quantities of interest, such as histograms, boxplots, etc.), and performing hexagonal binning of two quantitiative variables through a `drHexbin()` function.
 
 ### Quantiles ###
 
 By far the most common thing we tend to compute over the entire data other than summary statistics and tabulations is quantiles.  With `datadr`, there is a very simple interface to computing quantiles over the entire data set regardless of division.
 
-To be able to compute quantiles, a "ddf" object must be supplied, and the `range` attribute of the variable of interest must have been computed using `updateAttributes()`.  The range is required because the quantile estimation algorithm takes the range of the variable and slices it into a grid of `nBins` bins.  Each observation of the variable is placed into the bin of the interval that it falls in and the bin counts are tabulated.  Then the resulting table is turned into a quantile estimate.
+To be able to compute quantiles, a ddf must be supplied, and the `range` attribute of the variable of interest must have been computed using `updateAttributes()`.  The range is required because the quantile estimation algorithm takes the range of the variable and slices it into a grid of `nBins` bins.  Each observation of the variable is placed into the bin of the interval that it falls in and the bin counts are tabulated.  Then the resulting table is turned into a quantile estimate.
 
 The quantile estimation returns results similar to that of `type = 1` in R's base `quantile()` function.
 
 #### Example: adult data
 
-Here we provide a quick example of how to compute quantiles.  We have implemented function `drQuantile()` that at a minimum requires a "ddf" object and a specification of `var`, the variable you would like to compute the quantiles of.
+Here we provide a quick example of how to compute quantiles.  We have implemented function `drQuantile()` that at a minimum requires a ddf and a specification of `var`, the variable you would like to compute the quantiles of.
 
 We will use the `adult` data from before.  Let's load it and create a by education division:
 
@@ -63,7 +63,7 @@ xyplot(q ~ fval, groups = group, data = hpwBySexQuant, auto.key = TRUE)
 
 ### Aggregation ###
 
-Division-agnostic aggregation can be done with `drAggregate()`.  This function is similar to R's `aggregate()` and `xtabs()`.  It provides a formula interface to specifying both the quantity to sum and the variables to group by.  Unlike `xtabs()`, `drAggregate()` returns a data frame with rows only for combinations of factors for which there was a positive frequency.
+Division-independent aggregation can be done with `drAggregate()`.  This function is similar to R's `aggregate()` and `xtabs()`.  It provides a formula interface to specifying both the quantity to sum and the variables to group by.  Unlike `xtabs()`, `drAggregate()` returns a data frame with rows only for combinations of factors for which there was a positive frequency.
 
 ```{r aggregate_example, message = FALSE}
 # load adult data for aggregate example
@@ -81,9 +81,15 @@ totAge <- drAggregate(age ~ race + sex, data = byEd)
 totAge
 ```
 
-
 ### Hexagonal Binning ###
 
+A useful binning approach for scatterplot summaries of large data is hexagonal binning.  If you are not familiar with this approach, see [here](http://cran.r-project.org/web/packages/hexbin/vignettes/hexagon_binning.pdf).  `datadr` provides a division-independent hexbin method that is pretty straightforward.  A call to `drHexbin()` must specify at a minimum the input ddf, the name of the x and y variable.  The remaining parameters are passed on to the individual `hexbin()` function in the `hexbin` package, which is applied to each subset and the results are aggregated.
 
+Here is a simple example.  Suppose we want a binned scatterplot of age vs. education using the `adult` data:
 
-
+```{r hexbin_example, message = FALSE}
+library(hexbin)
+# do hexbin aggregation on age and education
+res <- drHexbin(byEd, "educationnum", "age", xbins = 15)
+plot(res, xlab = "education", ylab = "age")
+```
