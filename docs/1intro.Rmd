@@ -105,7 +105,7 @@ devtools::install_github("housingData", "hafen")
 
 Now we load the packages and look at the housing data:
 
-```{r quickstart_loadpackages, eval=TRUE, echo=TRUE}
+```{r quickstart_loadpackages, eval=TRUE, echo=TRUE, message=FALSE}
 library(housingData)
 library(datadr)
 library(trelliscope)
@@ -175,7 +175,7 @@ We can apply this transformation to each subset in our data with `addTransform()
 byCountySlope <- addTransform(byCounty, lmCoef)
 ```
 
-This applies `lmCoef()` to each subset in a deferred fashion, meaning that for all intents and purposes we can think of `byCountySlope` as a distributed data object that containes the result of `lmCoef()` being applied to each subset.  But computation is deffered until another data operation is applied to `byCountySlope`, such as a recombination, which we will do next.
+This applies `lmCoef()` to each subset in a deferred fashion, meaning that for all intents and purposes we can think of `byCountySlope` as a distributed data object that contains the result of `lmCoef()` being applied to each subset.  But computation is deffered until another data operation is applied to `byCountySlope`, such as a recombination, which we will do next.
 
 When we look at a subset of `byCountySlope`, we see what the result will look like:
 
