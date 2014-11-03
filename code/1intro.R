@@ -89,7 +89,7 @@ str(byCountyGeo[[1]])
 
 
 
-vdbConn("vdb")
+vdbConn("vdb", name = "tesseraTutorial")
 
 
 
@@ -118,7 +118,7 @@ priceCog(byCounty[[1]]$value)
 
 
 makeDisplay(byCounty,
-   name = "list_sold_vs_time",
+   name = "list_sold_vs_time_datadr_tut",
    desc = "List and sold price over time",
    panelFn = timePanel, 
    cogFn = priceCog,

@@ -1,5 +1,3 @@
-```
-
 ## MapReduce ##
 
 ### Introduction to MapReduce ###

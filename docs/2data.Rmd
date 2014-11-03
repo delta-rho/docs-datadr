@@ -1,5 +1,3 @@
-```
-
 ## Dealing with Data in D&R ##
 
 ### Key-Value Pairs ###

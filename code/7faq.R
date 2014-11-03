@@ -1,4 +1,3 @@
-
 ## Misc ##
 
 ### Debugging ###
@@ -57,19 +56,15 @@ If it has these additional characteristics, it is all the more interesting:
 
 #### How is `datadr` similar to / different from `plyr` / `dplyr`?
 
-Please note that we do not see `dplyr` and `datadr` two in competition.  The beauty of R is that there are many ways to do things.  The purpose of this discussion is both to point out when one might be more appropriate than the other.
+`dplyr` is an amazing package for quickly (both in coding and processing time) manipulating data frame like objects.  Although `dplyr` was born of `plyr` and the split-apply-combine paradigm, we see `dplyr` and `datadr` to be quite complementary, using `dplyr` for within-subset `datadr` computations.  The purpose of this discussion is to point out when one might be more appropriate than the other, which we will discuss in terms of scalability, flexibility, performance, and other features.
 
-Between `plyr` and `dplyr`, `datadr` is particularly similar to `dplyr`.  `dplyr` provides a backend-agnostic interface to performing split-apply-combine operations, which is basically the same thing that `datadr` does.  However, there are important distinctions, which we will discuss in terms of scalability, flexibility, performance, and other features.
+1. **Scalability:** A backing technology for `datadr` must be a key-value store that is capable of running MapReduce operations.  For `dplyr`, it is tabular backends that can run group-by operations.  Backends that satisfy the requirements of `datadr` include Hadoop, Spark, etc., while backends that satisfy the requirements of `dplyr` include MySQL, SQLite, etc.  We are aware of users using `dplyr` on the low tens of gigabytes of data.  Backends like Hadoop are designed to scale to hundreds of terabytes, and we have used `datadr` with multi-terabyte data.  However, we have also found `datadr` to be very useful with small data sets - it all depends on what you want to do with the data.
 
-1. **Scalability:** A backing technology for `datadr` must be a key-value store that is capable of running MapReduce operations.  For `dplyr`, it is tabular backends that can run group-by operations.  Backends that satisfy the requirements of `datadr` include Hadoop, Spark, etc., while backends that satisfy the requirements of `dplyr` include MySQL, SQLite, etc.  We are aware of users using `dplyr` on the low tens of gigabytes of data.  Backends like Hadoop are designed to scale to hundreds of terabytes, and we have used `datadr` with multi-terabyte data.  That said, we have heard of `dplyr` plugins to systems like Cloudera's Impala, which could bring greater scalability to `dplyr`.  However, our experience has indicated that typically when data is very very big, it is also very very complex, and becomes very difficult to treat as a large table.
-
-2. **Flexibility:** Data structures in `dplyr` must be tabular, such as data frames, SQL tables, etc.  In datadr, data structures can be arbitrary.  While a great deal of the data we analyze is tabular, throughout the course of a data analysis it is often much more convenient to store data as arbitrary objects.  For example, we may want to store the result of a linear model fit to each subset of data.  We often have disparate sources of data that we can join together into a semi-structured format much more conveniently and compactly than a table join that flattens the results into a single large table.  Also, from an algorithmic point of view, the backing MapReduce framework of `datadr` provides a great deal more flexibility than simple group-gy operations.  But with the flexibility comes a bit more complexity.  Thinking of everything as a data frame in `dplyr` greatly simplifies things, but can come with a cost of what you are able to do.
+2. **Flexibility:** Data structures in `dplyr` are tabular, such as data frames, SQL tables, etc.  In datadr, data structures can be arbitrary.  Often it is convenient or necessary to store data as arbitrary objects.  From an algorithmic point of view, the backing MapReduce framework of `datadr` provides a great deal more flexibility than simple group-gy operations.  But with the flexibility comes a bit more complexity.  Thinking of everything as a data frame in `dplyr` greatly simplifies things, and if that is what you are dealing with, it is a great choice.
 
 3. **Performance:** A lot of effort has been spent on optimization for `dplyr`.  With `datadr`, we have been focusing on getting the design right and will move to tuning for performance soon.  Even with `datadr` fully-optimized, a lot of the difference in speed of operations is highly dependent on the backend being used, and also on the design philosophy (see below).  With `datadr`, we are concerned about speed, but we are more concerned with the tools accomodating the D&R analysis approach.
 
-4. **Philosophy:** While `datadr`'s "divide and recombine" strategy is basically the same thing as "split-apply-combine", there are some important emphases to the D&R approach.  A very important one is that in D&R, when we split a dataset, we require the partioning to be persistent.  This means repartitioning the input data and saving a copy of the result.  This can be expensive, but it is very important.  Typically we divide once and then apply/recombine multiple times.  While we pay an up-front cost but reap the benefits during the meat of our analysis.  `dplyr`'s philosophy is to do things quickly and through very simple syntax with tabular data, and it does that very well.
-
-5. Other Features: Another consideration is the features that come along with "ecosystem" of either package.  `dplyr` is being designed to work closesly with `ggvis`, for example.  `datadr` is designed to work closely with `trelliscope`.  Also, `datadr` is designed to support new advances in D&R theory and methods.
+4. **Philosophy:** While `datadr`'s "divide and recombine" strategy is basically the same thing as "split-apply-combine", there are some important emphases to the D&R approach.  A very important one is that in D&R, when we split a dataset, we require the partioning to *always* be persistent.  This means repartitioning the input data and saving a copy of the result.  This can be expensive, but it is very important.  Typically we divide once and then apply/recombine multiple times.  While we pay an up-front cost but reap the benefits during the meat of our analysis.  `dplyr`'s philosophy is to do things quickly and through very simple syntax with tabular data, and it does that very well.
 
 #### How is `datadr` similar to / different from Pig?
 
@@ -88,7 +83,7 @@ Instead of making direct comparisons, I will try to point out some things that I
 - `datadr` leverages Hadoop, which is routinely used for extremely large data sets
 - `datadr` as an interface is extensible to other backends
 - `datadr` is not only a technology linking R to distributed computing backends, but an implementation of D&R, an *approach* to data analysis that has been used successfully for many analyses of large, complex data
-- `datadr` provides a backend to scalable detailed visualization of data using [trelliscope](http://tesseradata.org/docs-trelliscope/)
+- `datadr` provides a backend to scalable detailed visualization of data using [trelliscope](http://tessera.io/docs-trelliscope/)
 
 ### R Code ###
 

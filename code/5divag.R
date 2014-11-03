@@ -21,7 +21,7 @@ plot(hpwQuant)
 
 # compute quantiles of hoursperweek by sex
 hpwBySexQuant <- drQuantile(byEd, var = "hoursperweek", by = "sex")
-xyplot(q ~ fval, groups = group, data = hpwBySexQuant, auto.key = TRUE)
+xyplot(q ~ fval, groups = sex, data = hpwBySexQuant, auto.key = TRUE)
 
 
 
