@@ -342,15 +342,15 @@
 <p>First, we need to install the necessary components, <code>datadr</code> and <code>trelliscope</code>.  These are R packages that we install from github.</p>
 
 <pre><code class="r">install.packages(&quot;devtools&quot;) # if not already installed
-devtools::install_github(&quot;datadr&quot;, &quot;tesseradata&quot;)
-devtools::install_github(&quot;trelliscope&quot;, &quot;tesseradata&quot;)
+devtools::install_github(&quot;tesseradata/datadr&quot;)
+devtools::install_github(&quot;tesseradata/trelliscope&quot;)
 </code></pre>
 
 <p>The example we go through will be a small dataset that we can handle in a local R session, and therefore we only need to have these two packages installed.  For other installation options when dealing with larger data sets, see the <a href="http://tessera.io/#quickstart">quickstart</a> on our website.</p>
 
 <p>We will use as an example a data set consisting of the median list and sold price of homes in the United States, aggregated by county and month from 2008 to early 2014.  This data is available in a package called <code>housingData</code>.  To install this package:</p>
 
-<pre><code class="r">devtools::install_github(&quot;housingData&quot;, &quot;hafen&quot;)
+<pre><code class="r">devtools::install_github(&quot;hafen/housingData&quot;)
 </code></pre>
 
 <h4>Environment setup</h4>
