@@ -3,12 +3,12 @@
 
 
 install.packages("devtools") # if not already installed
-devtools::install_github("datadr", "tesseradata")
-devtools::install_github("trelliscope", "tesseradata")
+devtools::install_github("tesseradata/datadr")
+devtools::install_github("tesseradata/trelliscope")
 
 
 
-devtools::install_github("housingData", "hafen")
+devtools::install_github("hafen/housingData")
 
 
 

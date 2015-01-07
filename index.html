@@ -360,16 +360,8 @@ devtools::install_github(&quot;tesseradata/trelliscope&quot;)
 <pre><code class="r">library(housingData)
 library(datadr)
 library(trelliscope)
-</code></pre>
 
-<pre><code>Warning in gzfile(file, &quot;rb&quot;): cannot open compressed file &#39;&#39;, probable
-reason &#39;No such file or directory&#39;
-</code></pre>
-
-<pre><code>Error in gzfile(file, &quot;rb&quot;): cannot open the connection
-</code></pre>
-
-<pre><code class="r">head(housing)
+head(housing)
 </code></pre>
 
 <pre><code>   fips         county state       time nSold medListPriceSqft
@@ -423,16 +415,16 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
 <pre><code class="r">summary(byCounty)
 </code></pre>
 
-<pre><code>         fips                  time                nSold        
- ---------------------  ------------------  ------------------- 
-         levels : 2883  missing :        0   missing :   164370 
-        missing : 0         min : 08-10-01       min :       11 
-  &gt; freqTable head &lt;        max : 14-03-01       max :    35619 
- 26077 : 140                                    mean : 274.6582 
- 51069 : 140                                 std dev : 732.2429 
- 08019 : 139                                skewness :   10.338 
- 13311 : 139                                kurtosis : 222.8995 
- ---------------------  ------------------  ------------------- 
+<pre><code>        fips                 time                nSold        
+ -------------------  ------------------  ------------------- 
+       levels : 2883  missing :        0   missing :   164370 
+      missing : 0         min : 08-10-01       min :       11 
+ &gt; freqTable head &lt;       max : 14-03-01       max :    35619 
+ 26077 : 140                                  mean : 274.6582 
+ 51069 : 140                               std dev : 732.2429 
+ 08019 : 139                              skewness :   10.338 
+ 13311 : 139                              kurtosis : 222.8995 
+ -------------------  ------------------  ------------------- 
    medListPriceSqft     medSoldPriceSqft   
  --------------------  ------------------- 
   missing :     48399   missing :   162770 
@@ -453,8 +445,7 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
 xyplot(q ~ fval, data = priceQ, scales = list(y = list(log = 10)))
 </code></pre>
 
-<pre><code>Error in eval(expr, envir, enclos): could not find function &quot;xyplot&quot;
-</code></pre>
+<p><img src="figures/knitr/quickstart_quantile-1.png" alt="plot of chunk quickstart_quantile"> </p>
 
 <p>By the way, what does a subset of <code>byCounty</code> look like?  <code>byCounty</code> is a list of <em>key-value pairs</em>, which we will learn more about later.  Essentially, the collection of subsets can be thought of as a large list, where each list element has a key and a value.  To look at the first key-value pair:</p>
 
@@ -615,8 +606,7 @@ $value
 <pre><code class="r">timePanel(byCounty[[20]]$value)
 </code></pre>
 
-<pre><code>Error in timePanel(byCounty[[20]]$value): could not find function &quot;xyplot&quot;
-</code></pre>
+<p><img src="figures/knitr/quickstart_panel_test-1.png" alt="plot of chunk quickstart_panel_test"> </p>
 
 <p>Great!</p>
 
@@ -640,7 +630,18 @@ $value
 <pre><code class="r">priceCog(byCounty[[1]]$value)
 </code></pre>
 
-<pre><code>Error in priceCog(byCounty[[1]]$value): could not find function &quot;cog&quot;
+<pre><code>$slope
+         time 
+-0.0002323686 
+
+$meanList
+[1] 72.76927
+
+$listRange
+[1] 23.08482
+
+$nObs
+[1] 66
 </code></pre>
 
 <h4>Making the display</h4>
@@ -954,8 +955,7 @@ qplot(y = splitSizeDistn(irisDdo),
    xlab = &quot;percentile&quot;, ylab = &quot;subset size (kb)&quot;)
 </code></pre>
 
-<pre><code>Error in eval(expr, envir, enclos): could not find function &quot;qplot&quot;
-</code></pre>
+<p><img src="figures/knitr/plot_iris_split_size-1.png" alt="plot of chunk plot_iris_split_size"> </p>
 
 <p>Another way to get updated attributes is at the time the ddo is created, by setting <code>update = TRUE</code>:</p>
 
@@ -1149,8 +1149,8 @@ summary(irisDdf)
  --------------------  --------------------  --------------------- 
       Petal.Width            Species       
  ---------------------  ------------------ 
-  missing :          0          levels : 3 
-      min :        0.1         missing : 0 
+  missing :          0        levels : 3   
+      min :        0.1       missing : 0   
       max :        2.5  &gt; freqTable head &lt; 
      mean :   1.199333      setosa : 50    
   std dev :  0.7622377  versicolor : 50    
@@ -1638,8 +1638,7 @@ qplot(y = splitRowDistn(byRandom),
    xlab = &quot;percentile&quot;, ylab = &quot;number of rows in subset&quot;)
 </code></pre>
 
-<pre><code>Error in eval(expr, envir, enclos): could not find function &quot;qplot&quot;
-</code></pre>
+<p><img src="figures/knitr/byrandom_row_distn-1.png" alt="plot of chunk byrandom_row_distn"> </p>
 
 <p>We see that there are not exactly 10 rows in each subset, but 10 rows on average.  The random replicate algorithm simply randomly assigns each row of the input data into the number of bins \(K\) determined by the total number of rows \(n\) in the data divided by the desired number of rows per subset.  Thus the distribution of the number of rows in each subset is like a draw from a multinomial with number of trials \(n\) and event probabilities of being put into one of \(K\) bins as \(p_i=1/K, i=1, \ldots, K\).  We are working on a scalable approach to randomly assign exactly \(n/K\) rows to each subset.</p>
 
@@ -3005,7 +3004,7 @@ irisDiskConn
 </code></pre>
 
 <pre><code>localDiskConn connection
-  loc=/private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpkyyJDN/irisKV; nBins=0
+  loc=/private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpmeDLWY/irisKV; nBins=0
 </code></pre>
 
 <p><code>irisDiskConn</code> is simply a &quot;kvConnection&quot; object that points to the directory.  Meta data containing data attributes is also stored in this directory.  If we lose the connection object <code>irisDiskConn</code>, the data still stays on the disk, and we can get our connection back by calling</p>
@@ -3593,17 +3592,17 @@ irisConn &lt;- localDiskConn(file.path(tempdir(), &quot;iris&quot;), autoYes = T
 irisData &lt;- drRead.csv(csvFile, rowsPerBlock = 20, output = irisConn)
 </code></pre>
 
-<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpkyyJDN/iris.csv 
-   Processing chunk  1 
-   Processing chunk  2 
-   Processing chunk  3 
-   Processing chunk  4 
-   Processing chunk  5 
-   Processing chunk  6 
-   Processing chunk  7 
-   Processing chunk  8 
-   Processing chunk  9 
-   * End of file - no data for chunk  9 
+<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpmeDLWY/iris.csv 
+  Processing chunk  1 
+  Processing chunk  2 
+  Processing chunk  3 
+  Processing chunk  4 
+  Processing chunk  5 
+  Processing chunk  6 
+  Processing chunk  7 
+  Processing chunk  8 
+  Processing chunk  9 
+  * End of file - no data for chunk  9 
 </code></pre>
 
 <pre><code class="r"># look at resulting object
@@ -3777,7 +3776,7 @@ $value
 <hr>
 
 <div class="footer">
-   <p>&copy; Tessera, 2014</p>
+   <p>&copy; Tessera, 2015</p>
 </div>
 </div> <!-- /container -->
 

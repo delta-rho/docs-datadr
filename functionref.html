@@ -247,6 +247,9 @@
    <a target="_self" class="nav-not-header" href="#setuptransformenv">setupTransformEnv</a>
 </li>
 <li class="">
+   <a target="_self" class="nav-not-header" href="#sparkcontrol">sparkControl</a>
+</li>
+<li class="">
    <a target="_self" class="nav-not-header" href="#sparkdataconn">sparkDataConn</a>
 </li>
 <li class="">
@@ -263,8 +266,8 @@
 <h3>Divide and Recombine for Large, Complex Data</h3>
 
 <p><strong>Author:</strong> Ryan Hafen</p>
-<p><strong>Version:</strong> 0.7.4.1</p>
-<p><strong>Date:</strong> 2014-10-08</p>
+<p><strong>Version:</strong> 0.7.5</p>
+<p><strong>Date:</strong> 2015-01-06</p>
 <p><strong>License:</strong> BSD_3_clause + file LICENSE</p>
 
 <h4>Description</h4>
@@ -282,7 +285,9 @@ R (&gt;= 2.15.1)</p>
 <h4>Suggests</h4>
 <p>
 testthat (&gt;= 0.8.1),
-roxygen2 (&gt;= 4.0.0)</p>
+roxygen2 (&gt;= 4.0.0),
+Rhipe,
+SparkR</p>
 
 </div>
 <!-- addData -->   
@@ -380,34 +385,34 @@ Add a transformation function to be applied to each subset of a distributed data
 
   <p><ul>
 <li> age. continuous
-   </li>
+  </li>
 <li> workclass. Private, Self-emp-not-inc, Self-emp-inc, Federal-gov, Local-gov, State-gov, Without-pay, Never-worked
-   </li>
+  </li>
 <li> fnlwgt. continuous
-   </li>
+  </li>
 <li> education. Bachelors, Some-college, 11th, HS-grad, Prof-school, Assoc-acdm, Assoc-voc, 9th, 7th-8th, 12th, Masters, 1st-4th, 10th, Doctorate, 5th-6th, Preschool
-   education-num: continuous
-   </li>
+  education-num: continuous
+  </li>
 <li> marital. Married-civ-spouse, Divorced, Never-married, Separated, Widowed, Married-spouse-absent, Married-AF-spouse
-   </li>
+  </li>
 <li> occupation. Tech-support, Craft-repair, Other-service, Sales, Exec-managerial, Prof-specialty, Handlers-cleaners, Machine-op-inspct, Adm-clerical, Farming-fishing, Transport-moving, Priv-house-serv, Protective-serv, Armed-Forces
-   </li>
+  </li>
 <li> relationship. Wife, Own-child, Husband, Not-in-family, Other-relative, Unmarried
-   </li>
+  </li>
 <li> race. White, Asian-Pac-Islander, Amer-Indian-Eskimo, Other, Black
-   </li>
+  </li>
 <li> sex. Female, Male
-   </li>
+  </li>
 <li> capgain. continuous
-   </li>
+  </li>
 <li> caploss. continuous
-   </li>
+  </li>
 <li> hoursperweek. continuous
-   </li>
+  </li>
 <li> nativecountry. United-States, Cambodia, England, Puerto-Rico, Canada, Germany, Outlying-US(Guam-USVI-etc), India, Japan, Greece, South, China, Cuba, Iran, Honduras, Philippines, Italy, Poland, Jamaica, Vietnam, Mexico, Portugal, Ireland, France, Dominican-Republic, Laos, Ecuador, Taiwan, Haiti, Columbia, Hungary, Guatemala, Nicaragua, Scotland, Thailand, Yugoslavia, El-Salvador, Trinadad&Tobago, Peru, Hong, Holand-Netherlands
-   </li>
+  </li>
 <li> income. <=50K, >50K
-   </li>
+  </li>
 <li> incomebin. 0 if income<=50K, 1 if income>50K
 </li>
 </ul></p>
@@ -793,7 +798,7 @@ Specify conditioning variable division parameters for data division
 
   <p><ul>
 <li> <a href = 'http://www.datadr.org'>http://www.datadr.org</a>
-  </li>
+ </li>
 <li> <a href = 'http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full'>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
 </ul></p>
@@ -882,11 +887,9 @@ datadr.
 <!-- ddf -->   
 <div class="tab-pane" id="ddf">
 
-<h3 class="fref_title">Instantiate a Distributed Data Frame ('ddf')
-Instantiate a distributed data frame ('ddf')</h3>
+<h3 class="fref_title">Instantiate a Distributed Data Frame ('ddf')</h3>
 
 <h4>Description</h4>
-Instantiate a Distributed Data Frame ('ddf')
 Instantiate a distributed data frame ('ddf')
 
 <h4>Usage</h4>
@@ -950,11 +953,9 @@ Accessor functions for attributes of ddo/ddf objects.  Methods also include <cod
 <!-- ddo -->   
 <div class="tab-pane" id="ddo">
 
-<h3 class="fref_title">Instantiate a Distributed Data Object ('ddo')
-Instantiate a distributed data object ('ddo')</h3>
+<h3 class="fref_title">Instantiate a Distributed Data Object ('ddo')</h3>
 
 <h4>Description</h4>
-Instantiate a Distributed Data Object ('ddo')
 Instantiate a distributed data object ('ddo')
 
 <h4>Usage</h4>
@@ -1110,7 +1111,7 @@ Divide a ddo/ddf object into subsets based on different criteria
 
   <p><ul>
 <li> <a href = 'http://www.datadr.org'>http://www.datadr.org</a>
-  </li>
+ </li>
 <li> <a href = 'http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full'>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
 </ul></p>
@@ -2397,7 +2398,7 @@ Apply an analytic recombination method to a ddo/ddf object and combine the resul
 
   <p><ul>
 <li> <a href = 'http://www.datadr.org'>http://www.datadr.org</a>
-  </li>
+ </li>
 <li> <a href = 'http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full'>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
 </ul></p>
@@ -2511,7 +2512,7 @@ Specify random replicate division parameters for data division
 
   <p><ul>
 <li> <a href = 'http://www.datadr.org'>http://www.datadr.org</a>
-  </li>
+ </li>
 <li> <a href = 'http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full'>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
 </ul></p>
@@ -2557,32 +2558,70 @@ Given an environment and collection of transformations, it populates the environ
 </div>
 
 
+<!-- sparkControl -->   
+<div class="tab-pane" id="sparkcontrol">
+
+<h3 class="fref_title">Specify Control Parameters for Spark Job</h3>
+
+<h4>Description</h4>
+Specify control parameters for a Spark job.  See <code>rhwatch</code> for details about each of the parameters.
+
+<h4>Usage</h4>
+<pre><code class="language-r"><div>sparkControl()</div></code></pre>
+
+
+</div>
+
+
 <!-- sparkDataConn -->   
 <div class="tab-pane" id="sparkdataconn">
 
 <h3 class="fref_title">Connect to Spark Data Source</h3>
 
 <h4>Description</h4>
-Connect to Spark data source (experimental).
+Connect to a Spark data source, potentially on HDFS
 
 <h4>Usage</h4>
-<pre><code class="language-r"><div>sparkDataConn(data&nbsp;=&nbsp;NULL, init&nbsp;=&nbsp;list(), verbose&nbsp;=&nbsp;TRUE)</div></code></pre>
+<pre><code class="language-r"><div>sparkDataConn(loc, type&nbsp;=&nbsp;"object", hdfs&nbsp;=&nbsp;FALSE, init&nbsp;=&nbsp;list(), autoYes&nbsp;=&nbsp;FALSE, reset&nbsp;=&nbsp;FALSE, verbose&nbsp;=&nbsp;TRUE)</div></code></pre>
 
 <h4>Arguments</h4>
 <dl>
-  <dt>data</dt>
-  <dd>a data frame or list of key-value pairs</dd>
+  <dt>loc</dt>
+  <dd>location on the file system (typically HDFS) for the data source</dd>
+  <dt>type</dt>
+  <dd>is it a "text" file or "object" (default) file?</dd>
+  <dt>hdfs</dt>
+  <dd>is the file on HDFS?</dd>
   <dt>init</dt>
-  <dd>a named list of arguments to be passed to <code>sparkR.init</code></dd>
+  <dd>if a SparkContext has not been initialized with <code>sparkR.init</code>, a named list of arguments to be passed to <code>sparkR.init</code> to initialize a SparkContext</dd>
+  <dt>autoYes</dt>
+  <dd>automatically answer "yes" to questions about creating a path if missing</dd>
+  <dt>reset</dt>
+  <dd>should existing metadata for this object be overwritten?</dd>
   <dt>verbose</dt>
   <dd>logical - print messages about what is being done</dd>
 </dl>
 
-  <h4>Note</h4>
+  <h4>Value</h4>
 
-  <p>This is currently a proof-of-concept.  It only allows in-memory data to be initialized as a Spark RDD, which is quite pointless for big data.  In the future, this will allow connections to link to data on HDFS.</p>
+  <p>a "kvConnection" object of class "sparkDataConn"</p>
 
 
+  <h4>Details</h4>
+
+  <p>This simply creates a "connection" to a directory (which need not have data in it).  To actually do things with this data, see <code><a href='#ddo'>ddo</a></code>, etc.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code>addData</code>, <code><a href='#ddo'>ddo</a></code>, <code><a href='#ddf'>ddf</a></code>, <code><a href='#sparkdataconn'>sparkDataConn</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
 
 </div>
 
@@ -2618,7 +2657,7 @@ Update attributes of a 'ddo' or 'ddf' object
 
   <h4>References</h4>
 
-  <p>Bennett, Janine, et al. "Numerically stable, single-pass, parallel statistics algorithms." Cluster Computing and Workshops, 2009. <em>CLUSTER'09. IEEE International Conference on.</em> IEEE, 2009.</p>
+  <p>Bennett, Janine, et al. "Numerically stable, single-pass, parallel statistics algorithms.' Cluster Computing and Workshops", 2009. <em>CLUSTER09. IEEE International Conference on.</em> IEEE, 2009</p>
 
 
 
@@ -2649,7 +2688,7 @@ Ryan Hafen
 <hr>
 
 <div class="footer">
-   <p>&copy; Tessera, 2014</p>
+   <p>&copy; Tessera, 2015</p>
 </div>
 </div> <!-- /container -->
 
