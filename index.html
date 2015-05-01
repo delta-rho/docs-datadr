@@ -42,6 +42,9 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
+                <span class="navbar-brand">
+<a href="http://tessera.io"> <img src='figures/icon.png' alt='tessera icon' width='30px' height='30px' style='margin-top: -3px;'> </a>
+        </span>
                 <a href="#content-top" class="navbar-brand page-scroll">
         datadr - Divide and Recombine in R
         </a>
@@ -2044,7 +2047,7 @@ totAge</code></pre>
 # do hexbin aggregation on age and education
 res &lt;- drHexbin(byEd, &quot;educationnum&quot;, &quot;age&quot;, xbins = 15)
 plot(res, xlab = &quot;education&quot;, ylab = &quot;age&quot;)</code></pre>
-<p><img src="index_files/figure-html/hexbin_example-1.png" title="" alt="" width="624" /></p>
+<p><img src="index_files/figure-html/hexbin_example-1.png" title="" alt="" width="768" /></p>
 </div>
 </div>
 <div id="storecompute-backends" class="section level1">
@@ -2154,7 +2157,7 @@ irisDiskConn &lt;- localDiskConn(file.path(tempdir(), &quot;irisKV&quot;), autoY
 <pre class="r"><code># print the connection object
 irisDiskConn</code></pre>
 <pre><code>localDiskConn connection
-  loc=/private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/Rtmp93kVat/irisKV; nBins=0</code></pre>
+  loc=/private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpjVNvin/irisKV; nBins=0</code></pre>
 <p><code>irisDiskConn</code> is simply a “kvConnection” object that points to the directory. Meta data containing data attributes is also stored in this directory. If we lose the connection object <code>irisDiskConn</code>, the data still stays on the disk, and we can get our connection back by calling</p>
 <pre class="r"><code>irisDiskConn &lt;- localDiskConn(file.path(tempdir(), &quot;irisKV&quot;))</code></pre>
 <p>Any meta data that was there is also read in. If you would like to connect to a directory but reset all meta data, you can call <code><a target='_blank' href='rd.html#localdiskconn'>localDiskConn()</a></code> with <code>reset = TRUE</code>.</p>
@@ -2555,7 +2558,7 @@ system(paste(&quot;head&quot;, csvFile))</code></pre>
 irisConn &lt;- localDiskConn(file.path(tempdir(), &quot;iris&quot;), autoYes = TRUE)
 # read in iris data
 irisData &lt;- drRead.csv(csvFile, rowsPerBlock = 20, output = irisConn)</code></pre>
-<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/Rtmp93kVat/iris.csv 
+<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpjVNvin/iris.csv 
   Processing chunk  1 
   Processing chunk  2 
   Processing chunk  3 

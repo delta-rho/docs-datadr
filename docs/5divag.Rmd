@@ -85,7 +85,7 @@ A useful binning approach for scatterplot summaries of large data is hexagonal b
 
 Here is a simple example.  Suppose we want a binned scatterplot of age vs. education using the `r rdl("adult")` data:
 
-```{r hexbin_example, message = FALSE}
+```{r hexbin_example, message = FALSE, fig.width=8, fig.height = 6}
 library(hexbin)
 # do hexbin aggregation on age and education
 res <- drHexbin(byEd, "educationnum", "age", xbins = 15)
