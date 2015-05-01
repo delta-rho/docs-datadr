@@ -1,12 +1,12 @@
-## Store/Compute Backends ##
+# Store/Compute Backends
 
-### Backend Choices ###
+## Backend Choices
 
-The examples we have seen so far have used very small datasets.  What if we have more data than fits in memory?  In this section we cover additional backends to `datadr` that allow us to scale the D&R approach to very large datasets.
+The examples we have seen so far have used very small datasets.  What if we have more data than fits in memory?  In this section we cover additional backends to datadr that allow us to scale the D&R approach to very large datasets.
 
-`datadr` has been designed to be extensible, providing the same interface to multiple backends.  Thus all of the examples we have illustrated so far can be run with the code unchanged on data registered to a different backend.
+datadr has been designed to be extensible, providing the same interface to multiple backends.  Thus all of the examples we have illustrated so far can be run with the code unchanged on data registered to a different backend.
 
-The general requirements for a backend to the `datadr` interface are key-value storage and MapReduce computation.
+The general requirements for a backend to the datadr interface are key-value storage and MapReduce computation.
 
 <img src="image/scalableenv.svg" width="450px" alt="scalableenv" style="display:block; margin:auto"/>
 <!-- ![scalableenv](image/scalableenv.png) -->
@@ -29,13 +29,13 @@ For each backend, we will in general follow the process of the following:
 - A D&R example
 - A MapReduce example
 
-### Small: Memory / CPU ###
+## Small: Memory / CPU
 
 The examples we have seen so far have all been based on in-memory key-value pairs.  Thus there will be nothing new in this section.  However, we will go through the process anyway to draw comparisons to the other backends and show how the interface stays the same.
 
 We will stick with a very simple example using the iris data.
 
-#### Initiating an in-memory ddf
+### Initiating an in-memory ddf
 
 With the in-memory backend, there is not a storage backend to "connect" to and add data to.  We can jump straight to initializing a ddo/ddf from data we already have in our environment.
 
@@ -43,9 +43,9 @@ For example, suppose we have the following collection of key-value pairs:
 
 ```{r memory_add_data}
 irisKV <- list(
-   list("key1", iris[1:40,]),
-   list("key2", iris[41:110,]),
-   list("key3", iris[111:150,]))
+  list("key1", iris[1:40,]),
+  list("key2", iris[41:110,]),
+  list("key3", iris[111:150,]))
 ```
 
 As we have seen before, we can initialize this as a ddf with the following:
@@ -55,47 +55,47 @@ As we have seen before, we can initialize this as a ddf with the following:
 irisDdf <- ddf(irisKV)
 ```
 
-#### D&R example
+### D&R example
 
 For a quick example, let's create a "by species" division of the data, and then do a recombination to compute the coefficients of a linear model of sepal length vs. sepal width:
 
 ```{r memory_byspecies, message=FALSE}
 # divide in-memory data by species
-bySpecies <- divide(irisDdf, 
-   by = "Species")
+bySpecies <- divide(irisDdf,
+  by = "Species")
 ```
 
 ```{r memory_recombine, message=FALSE}
 # transform bySpecies to a data frame of lm coefficients
 bySpeciesLm <- addTransform(bySpecies, function(x) {
-   coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
-   data.frame(slope = coefs[2], intercept = coefs[1])
+  coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
+  data.frame(slope = coefs[2], intercept = coefs[1])
 })
 # compute lm coefficients for each division and rbind them
 recombine(bySpeciesLm, combRbind)
 ```
 
-#### MapReduce example
+### MapReduce example
 
 For a MapReduce example, let's take the `bySpecies` data and find the 5 records with the highest sepal width:
 
 ```{r memory_top5, message=FALSE}
 # map returns top 5 rows according to sepal width
 top5map <- expression({
-   v <- do.call(rbind, map.values)
-   collect("top5", v[order(v$Sepal.Width, decreasing = TRUE)[1:5],])
+  v <- do.call(rbind, map.values)
+  collect("top5", v[order(v$Sepal.Width, decreasing = TRUE)[1:5],])
 })
 
 # reduce collects map results and then iteratively rbinds them and returns top 5
 top5reduce <- expression(
-   pre = {
-      top5 <- NULL
-   }, reduce = {
-      top5 <- rbind(top5, do.call(rbind, reduce.values))
-      top5 <- top5[order(top5$Sepal.Width, decreasing = TRUE)[1:5],]
-   }, post = {
-      collect(reduce.key, top5)
-   }
+  pre = {
+    top5 <- NULL
+  }, reduce = {
+    top5 <- rbind(top5, do.call(rbind, reduce.values))
+    top5 <- top5[order(top5$Sepal.Width, decreasing = TRUE)[1:5],]
+  }, post = {
+    collect(reduce.key, top5)
+  }
 )
 
 # execute the job
@@ -106,19 +106,21 @@ top5[[1]]
 
 Now we'll go through these same steps for the other backends.
 
-### Medium: Disk / Multicore ###
+## Medium: Disk / Multicore
 
 The "medium" key-value backend stores data on your machine's local disk, and is good for datasets that are bigger than will fit in (or are manageable in) your workstation's memory, but not so big that processing them with the available cores on your workstation becomes infeasible.  Typically this is good for data in the hundreds of megabytes.  It can be useful sometimes to store even very small datasets on local disk.
 
-#### Initiating a disk connection
+### Initiating a disk connection
 
 ```{r, echo=FALSE}
 # remove files if necessary
-try(unlink(file.path(tempdir(), "irisKV"), recursive=TRUE))
-try(unlink(file.path(tempdir(), "irisKV"), recursive=TRUE))
+try(unlink(file.path(tempdir(), "irisKV"), recursive = TRUE))
+try(unlink(file.path(tempdir(), "irisKV"), recursive = TRUE))
+try(unlink(file.path(tempdir(), "bySpecies"), recursive = TRUE))
+try(unlink(file.path(tempdir(), "iris"), recursive = TRUE))
 ```
 
-To initiate a local disk connection, we use the function `localDiskConn()`, and simply point it to a directory on our local file system.
+To initiate a local disk connection, we use the function `r rdl("localDiskConn()")`, and simply point it to a directory on our local file system.
 
 ```{r disk_conn, message=FALSE}
 # initiate a disk connection to a new directory /__tempdir__/irisKV
@@ -127,7 +129,7 @@ irisDiskConn <- localDiskConn(file.path(tempdir(), "irisKV"), autoYes = TRUE)
 
 Note that in this tutorial we are using a temporary directory as the root directory of our local disk objects through calling `tempdir()`.  You wouldn't do this in a real analysis but this makes the example run well in a non-intrusive platform-independent way.
 
-By default, if the directory does not exist, `localDiskConn()` will ask you if you would like to create the directory.  Since we specify `autoYes = TRUE`, the directory is automatically created.
+By default, if the directory does not exist, `r rdl("localDiskConn()")` will ask you if you would like to create the directory.  Since we specify `autoYes = TRUE`, the directory is automatically created.
 
 ```{r print_disk_conn}
 # print the connection object
@@ -140,22 +142,22 @@ irisDiskConn
 irisDiskConn <- localDiskConn(file.path(tempdir(), "irisKV"))
 ```
 
-Any meta data that was there is also read in.  If you would like to connect to a directory but reset all meta data, you can call `localDiskConn()` with `reset = TRUE`.
+Any meta data that was there is also read in.  If you would like to connect to a directory but reset all meta data, you can call `r rdl("localDiskConn()")` with `reset = TRUE`.
 
-Data is stored in a local disk connection by creating a new `.Rdata` file for each key-value pair.  For data with a very large number of key-value pairs, we can end up with too many files in a directory for the file system to handle efficiently.  It is possible to specify a parameter `nBins` to `localDiskConn()`, which tells the connection that new data should be equally placed into `nbins` subdirectories.  The default is `nBins = 0`.
+Data is stored in a local disk connection by creating a new `.Rdata` file for each key-value pair.  For data with a very large number of key-value pairs, we can end up with too many files in a directory for the file system to handle efficiently.  It is possible to specify a parameter `nBins` to `r rdl("localDiskConn()")`, which tells the connection that new data should be equally placed into `nbins` subdirectories.  The default is `nBins = 0`.
 
-#### Adding data 
+### Adding data
 
 We have initiated a "localDiskConn" connection, but it is just an empty directory.  We need to add data to it.  With the same key-value pairs as before:
 
 ```{r disk_iris}
 irisKV <- list(
-   list("key1", iris[1:40,]),
-   list("key2", iris[41:110,]),
-   list("key3", iris[111:150,]))
+  list("key1", iris[1:40,]),
+  list("key2", iris[41:110,]),
+  list("key3", iris[111:150,]))
 ```
 
-We can add key-value pairs to the connection with `addData()`, which takes the connection object as its first argument and a list of key-value pairs as the second argument.  For example:
+We can add key-value pairs to the connection with `r rdl("addData()")`, which takes the connection object as its first argument and a list of key-value pairs as the second argument.  For example:
 
 ```{r disk_add_data}
 addData(irisDiskConn, irisKV[1:2])
@@ -169,7 +171,7 @@ list.files(irisDiskConn$loc)
 
 `"_meta"` is a directory where the connection metadata is stored.  The two `.Rdata` files are the two key-value pairs we just added.  The file name is determined by the md5 hash of the data in the key (and we don't have to worry about this).
 
-We can call `addData()` as many times as we would like to continue to add data to the directory.  Let's add the final key-value pair:
+We can call `r rdl("addData()")` as many times as we would like to continue to add data to the directory.  Let's add the final key-value pair:
 
 ```{r disk_add_data2}
 addData(irisDiskConn, irisKV[3])
@@ -177,7 +179,7 @@ addData(irisDiskConn, irisKV[3])
 
 Now we have a connection with all of the data in it.
 
-#### Initializing a ddf
+### Initializing a ddf
 
 We can initialize a ddo/ddf with our disk connection object:
 
@@ -186,7 +188,7 @@ We can initialize a ddo/ddf with our disk connection object:
 irisDdf <- ddf(irisDiskConn)
 ```
 
-As noted before, with in-memory data, we initialize ddo/ddf objects with in-memory key-value pairs.  For all other backends, we pass a connection object.  `irisDdf` is now a distributed data frame that behaves in the same way as the one we created for the in-memory case.  The data itself though is located on disk.  
+As noted before, with in-memory data, we initialize ddo/ddf objects with in-memory key-value pairs.  For all other backends, we pass a connection object.  `irisDdf` is now a distributed data frame that behaves in the same way as the one we created for the in-memory case.  The data itself though is located on disk.
 
 The connection object is saved as an attribute of the ddo/ddf.
 
@@ -202,19 +204,19 @@ We see that the connection info for the object is added to the printout of `iris
 irisDdf <- updateAttributes(irisDdf)
 ```
 
-#### D&R Example
+### D&R Example
 
 Let's see how the code looks for the D&R example on the local disk data:
 
 ```{r disk_byspecies, message=FALSE}
 # divide local disk data by species
-bySpecies <- divide(irisDdf, 
-   by = "Species",
-   output = localDiskConn(file.path(tempdir(), "bySpecies"), autoYes = TRUE),
-   update = TRUE)
+bySpecies <- divide(irisDdf,
+  by = "Species",
+  output = localDiskConn(file.path(tempdir(), "bySpecies"), autoYes = TRUE),
+  update = TRUE)
 ```
 
-This code is the same as what we used for the in-memory data except that in `divide()`, we also need to specify an output connection.  If `output` is not provided, an attempt is made to read the data in to an in-memory connection.  Here we specify that we would like the output of the division to be stored on local disk in `"bySpecies"` in our R temporary directory.
+This code is the same as what we used for the in-memory data except that in `r rdl("divide()")`, we also need to specify an output connection.  If `output` is not provided, an attempt is made to read the data in to an in-memory connection.  Here we specify that we would like the output of the division to be stored on local disk in `"bySpecies"` in our R temporary directory.
 
 As stated before, note that local disk objects persists on disk.  I know where the data and metadata for the `bySpecies` object is located.  If I lose my R session or remove my object, I can get it back.  All attributes are stored as meta data at the connection, so that I don't need to worry about recomputing anything:
 
@@ -230,16 +232,16 @@ The code for the recombination remains exactly the same:
 ```{r disk_recombine, message = FALSE}
 # transform bySpecies to a data frame of lm coefficients
 bySpeciesLm <- addTransform(bySpecies, function(x) {
-   coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
-   data.frame(slope = coefs[2], intercept = coefs[1])
+  coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
+  data.frame(slope = coefs[2], intercept = coefs[1])
 })
 # compute lm coefficients for each division and rbind them
 recombine(bySpeciesLm, combRbind)
 ```
 
-#### Interacting with local disk ddo/ddf objects
+### Interacting with local disk ddo/ddf objects
 
-Note that all interactions with local disk ddo/ddf objects are the same as those we have seen so far.  
+Note that all interactions with local disk ddo/ddf objects are the same as those we have seen so far.
 
 For example, I can access data by index or by key:
 
@@ -256,28 +258,28 @@ Also, all the accessors like `getKeys()` work just the same:
 getKeys(bySpecies)
 ```
 
-#### MapReduce example
+### MapReduce example
 
 Here we again find the top 5 `iris` records according to sepal width.
 
 ```{r disk_top5, message=FALSE}
 # map returns top 5 rows according to sepal width
 top5map <- expression({
-   counter("map", "mapTasks", 1)
-   v <- do.call(rbind, map.values)
-   collect("top5", v[order(v$Sepal.Width, decreasing = TRUE)[1:5],])
+  counter("map", "mapTasks", 1)
+  v <- do.call(rbind, map.values)
+  collect("top5", v[order(v$Sepal.Width, decreasing = TRUE)[1:5],])
 })
 
 # reduce collects map results and then iteratively rbinds them and returns top 5
 top5reduce <- expression(
-   pre = {
-      top5 <- NULL
-   }, reduce = {
-      top5 <- rbind(top5, do.call(rbind, reduce.values))
-      top5 <- top5[order(top5$Sepal.Width, decreasing = TRUE)[1:5],]
-   }, post = {
-      collect(reduce.key, top5)
-   }
+  pre = {
+    top5 <- NULL
+  }, reduce = {
+    top5 <- rbind(top5, do.call(rbind, reduce.values))
+    top5 <- top5[order(top5$Sepal.Width, decreasing = TRUE)[1:5],]
+  }, post = {
+    collect(reduce.key, top5)
+  }
 )
 
 # execute the job
@@ -292,7 +294,7 @@ top5[[1]]
 
 I added the line with the call to `counter()` to the map expression to illustrate some of the control parameters described at the end of this section.
 
-#### `control` options
+### `control` options
 
 There are various aspects of backends that we want to be able to have control oer.  The `control` argument of a MapReduce job provides a general interface to do this.  A `control` argument is simply a named list of settings for various control parameters.
 
@@ -306,7 +308,7 @@ Currently, the available control parameters for MapReduce on a local disk connec
 - `map_temp_buff_size_bytes`: the size of the batches of key-value pairs to flush to intermediate storage from the map output -- default is 10485760 (10 Mb)
 - `reduce_buff_size_bytes`: the size of the batches of key-value pairs to send to the reduce -- default is 10485760 (10 Mb)
 
-The function `localDiskControl()` is used to create the default list.  Any parameter specified will override the default.
+The function `r rdl("localDiskControl()")` is used to create the default list.  Any parameter specified will override the default.
 
 <!-- TODO: talk about options(...) -->
 
@@ -318,16 +320,16 @@ library(parallel)
 cl <- makeCluster(3)
 
 # run MapReduce job with custom control
-top5a <- mrExec(bySpecies, 
-   map = top5map, reduce = top5reduce,
-   control = localDiskControl(cluster = cl))
+top5a <- mrExec(bySpecies,
+  map = top5map, reduce = top5reduce,
+  control = localDiskControl(cluster = cl))
 ```
 
 ```{r eval=TRUE, echo=FALSE, comment=NA, purl=TRUE}
 stopCluster(cl)
 ```
 
-The map and reduce tasks for this job were run on a 3-core cluster.  
+The map and reduce tasks for this job were run on a 3-core cluster.
 
 <!-- We set `map_buff_size_bytes` to 10.  This means that when sending key-value pairs to the map tasks, input key-value pairs will be bundled into batches of key-value pairs (minimum of 1 key-value pair per batch) that don't exceed 10 bytes.  Since our data is very small, this very low limit ensures that there is only one key-value pair per batch, and therefore that the 3 map tasks will all be doing work.  With the default buffer size of 10 Mb, all 3 input key-value pairs are sent to one map task, and in that case, it is pointless to run a multicore job because only one map task will be run. -->
 
@@ -340,11 +342,11 @@ counters(top5)$map$mapTasks
 counters(top5a)$map$mapTasks
 ```
 
-### Large: HDFS / RHIPE ###
+## Large: HDFS / RHIPE
 
 Very large data sets can be stored on the Hadoop Distributed File System (HDFS).  For this to work, your workstation must be connected to a Hadoop cluster with RHIPE installed.  If you want to try these examples but do not have a Hadoop cluster, we are still using the same small data set and you can download our single-node Vagrant virtual machine -- instructions [here](http://tessera.io/#quickstart).
 
-#### HDFS operations with RHIPE
+### HDFS operations with RHIPE
 
 Getting ready for dealing with data in Hadoop can require some Hadoop file system operations.  Here is a quick crash course on the available functions for interacting with HDFS from R using RHIPE.
 
@@ -454,42 +456,42 @@ rhdel("/tmp/testfile")
 
 Also see `rhcp()` and `rhmv()`.
 
-#### Initiating an HDFS connection
+### Initiating an HDFS connection
 
-To initiate a connection to data on HDFS, we use the function `hdfsConn()`, and simply point it to a directory on HDFS.
+To initiate a connection to data on HDFS, we use the function `r rdl("hdfsConn()")`, and simply point it to a directory on HDFS.
 
 ```{r hdfs_conn, eval=FALSE, purl=TRUE}
 # initiate an HDFS connection to a new HDFS directory /tmp/irisKV
 irisHDFSconn <- hdfsConn("/tmp/irisKV", autoYes = TRUE)
 ```
 
-Similar to local disk connections, by default, if the HDFS directory does not exist, `hdfsConn()` will ask you if you would like to create the directory.  Since we specify `autoYes = TRUE`, the directory is automatically created.  Also, as with local disk connections, `irisHDFSconn` is simply a "kvConnection" object that points to the HDFS directory which contains or will contain data, and where meta data is stored for the connection.
+Similar to local disk connections, by default, if the HDFS directory does not exist, `r rdl("hdfsConn()")` will ask you if you would like to create the directory.  Since we specify `autoYes = TRUE`, the directory is automatically created.  Also, as with local disk connections, `irisHDFSconn` is simply a "kvConnection" object that points to the HDFS directory which contains or will contain data, and where meta data is stored for the connection.
 
 ```{r hdfs_conn_print, eval=FALSE, purl=TRUE}
 # print the connection object
 irisHDFSconn
 ```
 
-This simply prints the location of the HDFS directory we are connected to and the type of data it will expect.  `"sequence"` is the default, which is a Hadoop sequence file.  Other options are `"map"` and `"text"`.  These can be specified using the `type` argument to `hdfsConn()`.  See `?hdfsConn` for more details.
+This simply prints the location of the HDFS directory we are connected to and the type of data it will expect.  `"sequence"` is the default, which is a Hadoop sequence file.  Other options are `"map"` and `"text"`.  These can be specified using the `type` argument to `r rdl("hdfsConn()")`.  See `?hdfsConn` for more details.
 
-#### Adding data 
+### Adding data
 
-There is a method `addData()` available for "hdfsConn" connections, but it is not recommended to use this.  The reason is that for each call of `addData()`, a new file is created on HDFS in the subdirectory that your connection points to.  If you have a lot of data, chances are that you will be adding a lot of individual files.  Hadoop does not like to handle large numbers of files.  If the data is very large, it likes a very small number of very large files.  Having a large number of files slows down job initialization and also requires more map tasks to run than would probably be desired.  However, the method is still available if you would like to use it.  Just note that the typical approach is to begin with data that is already on HDFS in some form (we will cover an example of beginning with text files on HDFS later).
+There is a method `r rdl("addData()")` available for "hdfsConn" connections, but it is not recommended to use this.  The reason is that for each call of `r rdl("addData()")`, a new file is created on HDFS in the subdirectory that your connection points to.  If you have a lot of data, chances are that you will be adding a lot of individual files.  Hadoop does not like to handle large numbers of files.  If the data is very large, it likes a very small number of very large files.  Having a large number of files slows down job initialization and also requires more map tasks to run than would probably be desired.  However, the method is still available if you would like to use it.  Just note that the typical approach is to begin with data that is already on HDFS in some form (we will cover an example of beginning with text files on HDFS later).
 
 To mimic what was done with the "localDiskConn" example:
 
 ```{r hdfs_add_data, eval=FALSE, purl=TRUE}
 irisKV <- list(
-   list("key1", iris[1:40,]),
-   list("key2", iris[41:110,]),
-   list("key3", iris[111:150,]))
+  list("key1", iris[1:40,]),
+  list("key2", iris[41:110,]),
+  list("key3", iris[111:150,]))
 
 addData(irisHDFSconn, irisKV)
 ```
 
-#### Initializing a ddf
+### Initializing a ddf
 
-We can initialize a ddo/ddf by passing the HDFS connection object to `ddo()` or `ddf()`.
+We can initialize a ddo/ddf by passing the HDFS connection object to `r rdl("ddo()")` or `r rdl("ddf()")`.
 
 ```{r hdfs_ddf, eval=FALSE, purl=TRUE}
 # initialize a ddf from hdfsConn
@@ -504,19 +506,19 @@ As with the disk connection `irisDdf` object, nearly all of the attributes have 
 irisDdf <- updateAttributes(irisDdf)
 ```
 
-#### D&R Example
+### D&R Example
 
 Let's see how the code looks for the D&R example on the HDFS data:
 
 ```{r hdfs_byspecies, eval=FALSE, purl=TRUE}
 # divide HDFS data by species
-bySpecies <- divide(irisDdf, 
-   by = "Species", 
-   output = hdfsConn("/tmp/bySpecies", autoYes=TRUE),
-   update = TRUE)
+bySpecies <- divide(irisDdf,
+  by = "Species",
+  output = hdfsConn("/tmp/bySpecies", autoYes=TRUE),
+  update = TRUE)
 ```
 
-As with the local disk data, we specify an HDFS output connection, indicating to store the results of the division to `"/tmp/bySpecies"` on HDFS.  As with local disk data, this object and all meta data persists on disk.  
+As with the local disk data, we specify an HDFS output connection, indicating to store the results of the division to `"/tmp/bySpecies"` on HDFS.  As with local disk data, this object and all meta data persists on disk.
 
 If we were to leave our R session and want to reinstate our `bySpecies` object in a new session:
 
@@ -530,27 +532,27 @@ The code for the recombination remains exactly the same:
 ```{r hdfs_recombine, eval=FALSE, purl=TRUE}
 # transform bySpecies to a data frame of lm coefficients
 bySpeciesLm <- addTransform(bySpecies, function(x) {
-   coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
-   data.frame(slope = coefs[2], intercept = coefs[1])
+  coefs <- coef(lm(Sepal.Length ~ Petal.Length, data = x))
+  data.frame(slope = coefs[2], intercept = coefs[1])
 })
 # compute lm coefficients for each division and rbind them
 recombine(bySpeciesLm, combRbind)
 ```
 
-#### Interacting with HDFS ddo/ddf objects
+### Interacting with HDFS ddo/ddf objects
 
-All interactions with HDFS ddo/ddf objects are still the same as those we have seen so far.  
+All interactions with HDFS ddo/ddf objects are still the same as those we have seen so far.
 
 ```{r hdfs_access, eval=FALSE, purl=TRUE}
 bySpecies[[1]]
 bySpecies[["Species=setosa"]]
 ```
 
-However, there are a few caveats about extractors for these objects.  If you specify a numeric index, `i`, the extractor method returns the key-value pair for the `i`th key, as available from `getKeys()`.  Thus, if you don't have your object keys read in, you can't access data in this way.  Another important thing to keep in mind is that retrieving data by key for data on HDFS requires that the data is in a Hadoop *mapfile*.  
+However, there are a few caveats about extractors for these objects.  If you specify a numeric index, `i`, the extractor method returns the key-value pair for the `i`th key, as available from `getKeys()`.  Thus, if you don't have your object keys read in, you can't access data in this way.  Another important thing to keep in mind is that retrieving data by key for data on HDFS requires that the data is in a Hadoop *mapfile*.
 
-#### Hadoop mapfiles
+### Hadoop mapfiles
 
-Random access by key for `datadr` data objects stored on Hadoop requires that they are stored in a valid mapfile.  By default, the result of any `divide()` operation returns a mapfile.  The user need not worry about the details of this -- if operations that require the data to be a valid mapfile are not given a mapfile, they will complain and tell you to convert your data to a mapfile.  
+Random access by key for datadr data objects stored on Hadoop requires that they are stored in a valid mapfile.  By default, the result of any `r rdl("divide()")` operation returns a mapfile.  The user need not worry about the details of this -- if operations that require the data to be a valid mapfile are not given a mapfile, they will complain and tell you to convert your data to a mapfile.
 
 For example, recall from our original data object, `irisDdf`, that the connection stated that the file type was a *sequence* file.  Let's try to retrieve the subset with key `"key1"`:
 
@@ -558,7 +560,7 @@ For example, recall from our original data object, `irisDdf`, that the connectio
 irisDdf[["key1"]]
 ```
 
-We have been told to call `makeExtractable()` on this data to make subsets extractable by key.
+We have been told to call `r rdl("makeExtractable()")` on this data to make subsets extractable by key.
 
 ```{r hdfs_makeExtractable, eval=FALSE, purl=TRUE}
 # make data into a mapfile
@@ -573,28 +575,28 @@ Let's try to get that subset by key again:
 irisDdf[["key1"]]
 ```
 
-#### MapReduce Example
+### MapReduce Example
 
 Here we again find the top 5 `iris` records according to sepal width.
 
 ```{r hdfs_top5, eval=FALSE, purl=TRUE}
 # map returns top 5 rows according to sepal width
 top5map <- expression({
-   counter("map", "mapTasks", 1)
-   v <- do.call(rbind, map.values)
-   collect("top5", v[order(v$Sepal.Width, decreasing=TRUE)[1:5],])
+  counter("map", "mapTasks", 1)
+  v <- do.call(rbind, map.values)
+  collect("top5", v[order(v$Sepal.Width, decreasing=TRUE)[1:5],])
 })
 
 # reduce collects map results and then iteratively rbinds them and returns top 5
 top5reduce <- expression(
-   pre = {
-      top5 <- NULL
-   }, reduce = {
-      top5 <- rbind(top5, do.call(rbind, reduce.values))
-      top5 <- top5[order(top5$Sepal.Width, decreasing=TRUE)[1:5],]
-   }, post = {
-      collect(reduce.key, top5)
-   }
+  pre = {
+    top5 <- NULL
+  }, reduce = {
+    top5 <- rbind(top5, do.call(rbind, reduce.values))
+    top5 <- top5[order(top5$Sepal.Width, decreasing=TRUE)[1:5],]
+  }, post = {
+    collect(reduce.key, top5)
+  }
 )
 
 # execute the job
@@ -603,11 +605,11 @@ top5 <- mrExec(bySpecies, map = top5map, reduce = top5reduce)
 top5[[1]]
 ```
 
-#### `control` options
+### `control` options
 
-For fine control over different parameters of a RHIPE / Hadoop job (and there are many parameters), we use the `control` argument to any of the `datadr` functions providing MapReduce functionality (`divide()`, `mrExec()`, etc.).  
+For fine control over different parameters of a RHIPE / Hadoop job (and there are many parameters), we use the `control` argument to any of the datadr functions providing MapReduce functionality (`r rdl("divide()")`, `r rdl("mrExec()")`, etc.).
 
-We can set RHIPE control parameters with the function `rhipeControl()`, which creates a named list of parameters and their values.  If a parameter isn't explicitly specified, its default is used.  The parameters available are:
+We can set RHIPE control parameters with the function `r rdl("rhipeControl()")`, which creates a named list of parameters and their values.  If a parameter isn't explicitly specified, its default is used.  The parameters available are:
 
 - `mapred`
 - `setup`
@@ -627,17 +629,17 @@ See the documentation for the RHIPE function `rhwatch` for details about these:
 
 The first three parameters in the list are the most important and often-used, particularly `mapred`, which is a list specifying specific Hadoop parameters such as `mapred.reduce.tasks` which can help tune a job.
 
-Defaults for these can be seen by calling `rhipeControl()` with no arguments.:
+Defaults for these can be seen by calling `r rdl("rhipeControl()")` with no arguments.:
 
 ```{r rhipe_default_control, eval=FALSE}
 rhipeControl()
 ```
 
-### Conversion ###
+## Conversion
 
 In many cases, it is useful to be able to convert from one key-value backend to another.  For example, we might have some smaller data out on HDFS that we would like to move to local disk.  Or we might have in-memory data that is looking too large and we want to take advantage of parallel processing so we want to push it to local disk or HDFS.
 
-We can convert data from one backend to another using the `convert()` method.  The general syntax is `convert(from, to)` where `from` is a ddo/ddf, and `to` is a "kvConnection" object.  When `to=NULL`, we are converting to in-memory.
+We can convert data from one backend to another using the `r rdl("convert()")` method.  The general syntax is `convert(from, to)` where `from` is a ddo/ddf, and `to` is a "kvConnection" object.  When `to=NULL`, we are converting to in-memory.
 
 ```{r conversion, eval=FALSE, purl=TRUE}
 # initialize irisDdf HDFS ddf object
@@ -645,19 +647,19 @@ irisDdf <- ddo(hdfsConn("/tmp/irisKV"))
 # convert from HDFS to in-memory ddf
 irisDdfMem <- convert(from = irisDdf)
 # convert from HDFS to local disk ddf
-irisDdfDisk <- convert(from = irisDdf, 
-   to = localDiskConn(file.path(tempdir(), "irisKVdisk"), autoYes=TRUE))
+irisDdfDisk <- convert(from = irisDdf,
+  to = localDiskConn(file.path(tempdir(), "irisKVdisk"), autoYes=TRUE))
 ```
 
-All possible conversions (disk -> HDFS, disk -> memory, HDFS -> disk, HDFS -> memory, memory -> disk, memory -> HDFS) have `convert()` methods implemented.
+All possible conversions (disk -> HDFS, disk -> memory, HDFS -> disk, HDFS -> memory, memory -> disk, memory -> HDFS) have `r rdl("convert()")` methods implemented.
 
-### Reading in Data ###
+## Reading in Data
 
 One of the most difficult parts of analyzing very large data sets is getting the original data into a format suitable for analysis.  This package provides some convenience functions for reading data in from text files, either collections of very large text files on a local file system that are to be read in sequentially, or collections of very large text files on HDFS.
 
-#### Reading in local text files
+### Reading in local text files
 
-Delimited text files can be read in using the `drRead.table()` family of functions.  This function reads blocks of lines of text files, converts them to a data frame, and stores the result as a value in a key-value pair.  For more difficult, less-structured text inputs, it is possible to write custom MapReduce jobs to read in the data.
+Delimited text files can be read in using the `r rdl("drRead.table()")` family of functions.  This function reads blocks of lines of text files, converts them to a data frame, and stores the result as a value in a key-value pair.  For more difficult, less-structured text inputs, it is possible to write custom MapReduce jobs to read in the data.
 
 As an example, suppose the iris data was given to us as a csv file:
 
@@ -669,7 +671,7 @@ write.csv(iris, file = csvFile, row.names = FALSE, quote = FALSE)
 system(paste("head", csvFile))
 ```
 
-We want to get this into a format suitable for analysis in R.  
+We want to get this into a format suitable for analysis in R.
 
 ```{r readtext, message=FALSE}
 # connection for where to store output

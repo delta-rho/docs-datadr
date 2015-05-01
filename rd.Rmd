@@ -1,0 +1,2442 @@
+---
+title: "datadr"
+subtitle: "Package Reference"
+author: Ryan Hafen
+copyright: Ryan Hafen
+output:
+  packagedocs:
+    toc: true
+rd_page: true
+navpills: |
+  <li><a href='index.html'>Docs</a></li>
+  <li class="active"><a href='rd.html'>Package Ref</a></li>
+  <li><a href='https://github.com/tesseradata/datadr'>Github <i class='fa fa-github'></i></a></li>
+---
+
+
+
+<h1>Divide and Recombine for Large, Complex Data</h1>
+
+<p><strong>Author:</strong> Ryan Hafen</p>
+<p><strong>Version:</strong> 0.7.5.6</p>
+<p><strong>Date:</strong> 2015-04-28</p>
+<p><strong>License:</strong> BSD_3_clause + file LICENSE</p>
+
+<h4>Description</h4>
+<p>Methods for dividing data into subsets, applying analytical
+methods to the subsets, and recombining the results.  Comes with a generic
+MapReduce interface as well.  Works with key-value pairs stored in memory,
+on local disk, or on HDFS, in the latter case using the R and Hadoop
+Integrated Programming Environment (RHIPE).  Also includes experimental
+support for key-value pairs stored as Spark RDDs using the SparkR package.</p>
+
+<h4>Depends</h4>
+<p>
+R (>= 2.15.1)</p>
+
+<h4>Suggests</h4>
+<p>
+testthat (>= 0.8.1),
+roxygen2 (>= 4.0.0),
+Rhipe,
+SparkR</p>
+
+# Key-Value Pairs
+
+
+
+## kvPair
+
+<h3>Specify a Key-Value Pair</h3>
+
+Specify a key-value pair
+
+<h4>Usage</h4>
+<pre class="r"><code>kvPair(k, v)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>k</dt>
+  <dd class="rd-dd">key - any R object</dd>
+  <dt>v</dt>
+  <dd class="rd-dd">value - any R object</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a list of objects of class "kvPair"
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>kvPair("name", "bob")</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#kvpairs>kvPairs</a></code>
+
+
+
+
+## kvPairs
+
+<h3>Specify a Collection of Key-Value Pairs</h3>
+
+Specify a collection of key-value pairs
+
+<h4>Usage</h4>
+<pre class="r"><code>kvPairs(...)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">key-value pairs (lists with two elements)</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a list of objects of class "kvPair"
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>kvPairs(kvPair(1, letters), kvPair(2, rnorm(10)))</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#kvpair>kvPair</a></code>
+
+
+
+
+## print.kvPair
+
+<h3>Print a key-value pair</h3>
+
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">object to be printed</dd>
+  <dt>...</dt>
+  <dd class="rd-dd">additional arguments</dd>
+</dl>
+
+
+
+
+
+## print.kvValue
+
+<h3>Print value of a key-value pair</h3>
+
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">object to be printed</dd>
+  <dt>...</dt>
+  <dd class="rd-dd">additional arguments</dd>
+</dl>
+
+
+
+
+
+## kvApply
+
+<h3>Apply Function to Key-Value Pair</h3>
+
+Apply a function to a single key-value pair - not a traditional R "apply" function.
+
+<h4>Usage</h4>
+<pre class="r"><code>kvApply(kvPair, fn)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>kvPair</dt>
+  <dd class="rd-dd">a key-value pair (a list with 2 elements or object created with <code><a href=#kvpair>kvPair</a></code>)</dd>
+  <dt>fn</dt>
+  <dd class="rd-dd">a function</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">Determines how a function should be applied to a key-value pair and then applies it: if the function has two formals, it applies the function giving it the key and the value as the arguments; if the function has one formal, it applies the function giving it just the value.  The function is assumed to return a value unless the result is a <code><a href=#kvpair>kvPair</a></code> object.  When the function returns a value the original key will be returned in the resulting key-value pair.</p>
+
+  <p class="rd-p">This provides flexibility and simplicity for when a function is only meant to be applied to the value (the most common case), but still allows keys to be used if desired.</p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>kv <- kvPair(1, 2)
+kv
+kvApply(kv, function(x) x^2)
+kvApply(kv, function(k, v) v^2)
+kvApply(kv, function(k, v) k + v)
+kvApply(kv, function(x) kvPair("new_key", x))</code></pre>
+
+# Distributed data objects
+
+
+
+## ddo
+
+<h3>Instantiate a Distributed Data Object ('ddo')</h3>
+
+Instantiate a distributed data object ('ddo')
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>conn</dt>
+  <dd class="rd-dd">an object pointing to where data is or will be stored for the ddf object - can be a kvConnection object created from <code><a href=#localdiskconn>localDiskConn</a></code> or <code><a href=#hdfsconn>hdfsConn</a></code>, or a data frame or list of key-value pairs</dd>
+  <dt>update</dt>
+  <dd class="rd-dd">should the attributes of this object be updated?  See <code><a href=#updateattributes>updateAttributes</a></code> for more details.</dd>
+  <dt>reset</dt>
+  <dd class="rd-dd">should all persistent metadata about this object be removed and the object created from scratch?  This setting does not effect data stored in the connection location.</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things if attributes are updated (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+
+
+
+
+## ddf
+
+<h3>Instantiate a Distributed Data Frame ('ddf')</h3>
+
+Instantiate a distributed data frame ('ddf')
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>conn</dt>
+  <dd class="rd-dd">an object pointing to where data is or will be stored for the ddf object - can be a kvConnection object created from <code><a href=#localdiskconn>localDiskConn</a></code> or <code><a href=#hdfsconn>hdfsConn</a></code>, or a data frame or list of key-value pairs</dd>
+  <dt>transFn</dt>
+  <dd class="rd-dd">transFn a function to be applied to the key-value pairs of this data prior to doing any processing, that transform the data into a data frame if it is not stored as such</dd>
+  <dt>update</dt>
+  <dd class="rd-dd">should the attributes of this object be updated?  See <code><a href=#updateattributes>updateAttributes</a></code> for more details.</dd>
+  <dt>reset</dt>
+  <dd class="rd-dd">should all persistent metadata about this object be removed and the object created from scratch?  This setting does not effect data stored in the connection location.</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things if attributes are updated (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+
+
+
+
+## updateAttributes
+
+<h3>Update Attributes of a 'ddo' or 'ddf' Object</h3>
+
+Update attributes of a 'ddo' or 'ddf' object
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>obj</dt>
+  <dd class="rd-dd">an object of class ddo or ddf</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code></dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This function looks for missing attributes related to a ddo or ddf (distributed data object or data frame) object and runs MapReduce to update them.  These attributes include "splitSizeDistn", "keys", "nDiv", "nRow", and "splitRowDistn".  These attributes are useful for subsequent computations that might rely on them.  The result is the input modified to reflect the updated attributes, and thus it should be used as <code>obj <- updateAttributes(obj)</code>.</p>
+
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+an object of class ddo or ddf
+</dl></p>
+
+
+  <h4>References</h4>
+
+  <p class="rd-p">Bennett, Janine, et al. "Numerically stable, single-pass, parallel statistics algorithms. Cluster Computing and Workshops", 2009. <em>CLUSTER09. IEEE International Conference on.</em> IEEE, 2009</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#ddo>ddo</a></code>, <code><a href=#ddf>ddf</a></code>, <code><a href=#divide>divide</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## ddf-accessors
+
+<h3>Accessor methods for 'ddo' and 'ddf' objects</h3>
+
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a ddf object</dd>
+  <dt>object</dt>
+  <dd class="rd-dd">a ddf/ddo object</dd>
+  <dt>...</dt>
+  <dd class="rd-dd">additional arguments</dd>
+</dl>
+
+
+
+
+
+## ddo-ddf-accessors
+
+<h3>Accessor Functions</h3>
+
+Accessor functions for attributes of ddo/ddf objects.  Methods also include <code>nrow</code> and <code>ncol</code> for ddf objects.
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a ddf/ddo object</dd>
+</dl>
+
+
+
+
+
+## ddo-ddf-attributes
+
+<h3>Managing attributes of 'ddo' or 'ddf' objects</h3>
+
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>obj</dt>
+  <dd class="rd-dd">ddo or ddf object</dd>
+  <dt>attrs</dt>
+  <dd class="rd-dd">a named list of attributes to set</dd>
+  <dt>attrName</dt>
+  <dd class="rd-dd">name of the attribute to get</dd>
+  <dt>attrNames</dt>
+  <dd class="rd-dd">vector of names of the attributes to get</dd>
+  <dt>...</dt>
+  <dd class="rd-dd">additional arguments</dd>
+</dl>
+
+
+
+
+
+## print.ddo
+
+<h3>Print a "ddo" or "ddf" Object</h3>
+
+Print an overview of attributes of distributed data objects (ddo) or distributed data frames (ddf)
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">object to be printed</dd>
+  <dt>...</dt>
+  <dd class="rd-dd">additional arguments</dd>
+</dl>
+
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+# Back End Connections
+
+
+
+## localDiskConn
+
+<h3>Connect to Data Source on Local Disk</h3>
+
+Connect to a data source on local disk
+
+<h4>Usage</h4>
+<pre class="r"><code>localDiskConn(loc, nBins = 0, fileHashFn = NULL, autoYes = FALSE,
+  reset = FALSE, verbose = TRUE)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>loc</dt>
+  <dd class="rd-dd">location on local disk for the data source</dd>
+  <dt>nBins</dt>
+  <dd class="rd-dd">number of bins (subdirectories) to put data files into - if anticipating a large number of k/v pairs, it is a good idea to set this to something bigger than 0</dd>
+  <dt>fileHashFn</dt>
+  <dd class="rd-dd">an optional function that operates on each key-value pair to determine the subdirectory structure for where the data should be stored for that subset, or can be specified "asis" when keys are scalar strings</dd>
+  <dt>autoYes</dt>
+  <dd class="rd-dd">automatically answer "yes" to questions about creating a path on local disk</dd>
+  <dt>reset</dt>
+  <dd class="rd-dd">should existing metadata for this object be overwritten?</dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This simply creates a "connection" to a directory on local disk (which need not have data in it).  To actually do things with this connection, see <code><a href=#ddo>ddo</a></code>, etc.  Typically, you should just use <code>loc</code> to specify where the data is or where you would like data for this connection to be stored.  Metadata for the object is also stored in this directory.</p>
+
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a "kvConnection" object of class "localDiskConn"
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code># connect to empty localDisk directory
+conn <- localDiskConn(file.path(tempdir(), "irisSplit"), autoYes = TRUE)
+# add some data
+addData(conn, list(list("1", iris[1:10,])))
+addData(conn, list(list("2", iris[11:110,])))
+addData(conn, list(list("3", iris[111:150,])))
+# represent it as a distributed data frame
+irisDdf <- ddf(conn, update = TRUE)
+irisDdf</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#adddata>addData</a></code>, <code><a href=#ddo>ddo</a></code>, <code><a href=#ddf>ddf</a></code>, <code><a href=#localdiskconn>localDiskConn</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## digestFileHash
+
+<h3>Digest File Hash Function</h3>
+
+Function to be used to specify the file where key-value pairs get stored for local disk connections, useful when keys are arbitrary objects.  File names are determined using a md5 hash of the object.  This is the default argument for <code>fileHashFn</code> in <code><a href='localDiskConn.html'>localDiskConn</a></code>.
+
+<h4>Usage</h4>
+<pre class="r"><code>digestFileHash(keys, conn)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>keys</dt>
+  <dd class="rd-dd">keys to be hashed</dd>
+  <dt>conn</dt>
+  <dd class="rd-dd">a "localDiskConn" object</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">You shouldnt need to call this directly other than to experiment with what the output looks like or to get ideas on how to write your own custom hash.</p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code># connect to empty localDisk directory
+path <- file.path(tempdir(), "irisSplit")
+unlink(path, recursive = TRUE)
+conn <- localDiskConn(path, autoYes = TRUE, fileHashFn = digestFileHash)
+# add some data
+addData(conn, list(list("key1", iris[1:10,])))
+addData(conn, list(list("key2", iris[11:110,])))
+addData(conn, list(list("key3", iris[111:150,])))
+# see that files were stored by their key
+list.files(path)</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#charfilehash>charFileHash</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## charFileHash
+
+<h3>Character File Hash Function</h3>
+
+Function to be used to specify the file where key-value pairs get stored for local disk connections, useful when keys are scalar strings.  Should be passed as the argument <code>fileHashFn</code> to <code><a href='localDiskConn.html'>localDiskConn</a></code>.
+
+<h4>Usage</h4>
+<pre class="r"><code>charFileHash(keys, conn)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>keys</dt>
+  <dd class="rd-dd">keys to be hashed</dd>
+  <dt>conn</dt>
+  <dd class="rd-dd">a "localDiskConn" object</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">You shouldnt need to call this directly other than to experiment with what the output looks like or to get ideas on how to write your own custom hash.</p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code># connect to empty localDisk directory
+path <- file.path(tempdir(), "irisSplit")
+unlink(path, recursive = TRUE)
+conn <- localDiskConn(path, autoYes = TRUE, fileHashFn = charFileHash)
+# add some data
+addData(conn, list(list("key1", iris[1:10,])))
+addData(conn, list(list("key2", iris[11:110,])))
+addData(conn, list(list("key3", iris[111:150,])))
+# see that files were stored by their key
+list.files(path)</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#digestfilehash>digestFileHash</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## localDiskControl
+
+<h3>Specify Control Parameters for MapReduce on a Local Disk Connection</h3>
+
+Specify control parameters for a MapReduce on a local disk connection.  Currently the parameters include:
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>cluster</dt>
+  <dd class="rd-dd">a "cluster" object obtained from <code><a href=http://www.inside-r.org/r-doc/parallel/makeCluster>makeCluster</a></code> to allow for parallel processing</dd>
+  <dt>map_buff_size_bytes</dt>
+  <dd class="rd-dd">determines how much data should be sent to each map task</dd>
+  <dt>reduce_buff_size_bytes</dt>
+  <dd class="rd-dd">determines how much data should be sent to each reduce task</dd>
+  <dt>map_temp_buff_size_bytes</dt>
+  <dd class="rd-dd">determines the size of chunks written to disk in between the map and reduce</dd>
+</dl>
+
+  <h4>Note</h4>
+
+  <p class="rd-p">If you have data on a shared drive that multiple nodes can access or a high performance shared file system like Lustre, you can run a local disk MapReduce job on multiple nodes by creating a multi-node cluster with <code><a href=http://www.inside-r.org/r-doc/parallel/makeCluster>makeCluster</a></code>.</p>
+
+  <p class="rd-p">If you are using multiple cores and the input data is very small, <code>map_buff_size_bytes</code> needs to be small so that the key-value pairs will be split across cores.</p>
+
+
+
+
+
+
+## hdfsConn
+
+<h3>Connect to Data Source on HDFS</h3>
+
+Connect to a data source on HDFS
+
+<h4>Usage</h4>
+<pre class="r"><code>hdfsConn(loc, type = "sequence", autoYes = FALSE, reset = FALSE,
+  verbose = TRUE)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>loc</dt>
+  <dd class="rd-dd">location on HDFS for the data source</dd>
+  <dt>type</dt>
+  <dd class="rd-dd">the type of data ("map", "sequence", "text")</dd>
+  <dt>autoYes</dt>
+  <dd class="rd-dd">automatically answer "yes" to questions about creating a path on HDFS</dd>
+  <dt>reset</dt>
+  <dd class="rd-dd">should existing metadata for this object be overwritten?</dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This simply creates a "connection" to a directory on HDFS (which need not have data in it).  To actually do things with this data, see <code><a href=#ddo>ddo</a></code>, etc.</p>
+
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a "kvConnection" object of class "hdfsConn"
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>  # connect to empty HDFS directory
+  conn <- hdfsConn("/test/irisSplit")
+  # add some data
+  addData(conn, list(list("1", iris[1:10,])))
+  addData(conn, list(list("2", iris[11:110,])))
+  addData(conn, list(list("3", iris[111:150,])))
+  # represent it as a distributed data frame
+  hdd <- ddf(conn)</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#adddata>addData</a></code>, <code><a href=#ddo>ddo</a></code>, <code><a href=#ddf>ddf</a></code>, <code><a href=#localdiskconn>localDiskConn</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## rhipeControl
+
+<h3>Specify Control Parameters for RHIPE Job</h3>
+
+Specify control parameters for a RHIPE job.  See <code>rhwatch</code> for details about each of the parameters.
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>mapred,setup,combiner,cleanup,orderby,shared,jarfiles,zips,jobname</dt>
+  <dd class="rd-dd">arguments to <code>rhwatch</code> in RHIPE</dd>
+</dl>
+
+
+
+
+
+## sparkControl
+
+<h3>Specify Control Parameters for Spark Job</h3>
+
+Specify control parameters for a Spark job.  See <code>rhwatch</code> for details about each of the parameters.
+
+
+
+
+
+## sparkDataConn
+
+<h3>Connect to Spark Data Source</h3>
+
+Connect to a Spark data source, potentially on HDFS
+
+<h4>Usage</h4>
+<pre class="r"><code>sparkDataConn(loc, type = "object", hdfs = FALSE, init = list(),
+  autoYes = FALSE, reset = FALSE, verbose = TRUE)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>loc</dt>
+  <dd class="rd-dd">location on the file system (typically HDFS) for the data source</dd>
+  <dt>type</dt>
+  <dd class="rd-dd">is it a "text" file or "object" (default) file?</dd>
+  <dt>hdfs</dt>
+  <dd class="rd-dd">is the file on HDFS?</dd>
+  <dt>init</dt>
+  <dd class="rd-dd">if a SparkContext has not been initialized with <code>sparkR.init</code>, a named list of arguments to be passed to <code>sparkR.init</code> to initialize a SparkContext</dd>
+  <dt>autoYes</dt>
+  <dd class="rd-dd">automatically answer "yes" to questions about creating a path if missing</dd>
+  <dt>reset</dt>
+  <dd class="rd-dd">should existing metadata for this object be overwritten?</dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This simply creates a "connection" to a directory (which need not have data in it).  To actually do things with this data, see <code><a href=#ddo>ddo</a></code>, etc.</p>
+
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a "kvConnection" object of class "sparkDataConn"
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code> # connect to empty HDFS directory
+ conn <- sparkDataConn("/test/irisSplit")
+ # add some data
+ addData(conn, list(list("1", iris[1:10,])))
+ addData(conn, list(list("2", iris[11:110,])))
+ addData(conn, list(list("3", iris[111:150,])))
+ # represent it as a distributed data frame
+ hdd <- ddf(conn)</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#adddata>addData</a></code>, <code><a href=#ddo>ddo</a></code>, <code><a href=#ddf>ddf</a></code>, <code><a href=#sparkdataconn>sparkDataConn</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+# Data I/O
+
+
+
+## addData
+
+<h3>Add Key-Value Pairs to a Data Connection</h3>
+
+Add key-value pairs to a data connection
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>conn</dt>
+  <dd class="rd-dd">a kvConnection object</dd>
+  <dt>data</dt>
+  <dd class="rd-dd">a list of key-value pairs (list of lists where each sub-list has two elements, the key and the value)</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">if data with the same key is already present in the data, should it be overwritten? (does not work for HDFS connections)</dd>
+</dl>
+
+  <h4>Note</h4>
+
+  <p class="rd-p">This is generally not recommended for HDFS as it writes a new file each time it is called, and can result in more individual files than Hadoop likes to deal with.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#removedata>removeData</a></code>, <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## removeData
+
+<h3>Remove Key-Value Pairs from a Data Connection</h3>
+
+Remove key-value pairs from a data connection
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>conn</dt>
+  <dd class="rd-dd">a kvConnection object</dd>
+  <dt>keys</dt>
+  <dd class="rd-dd">a list of keys indicating which k/v pairs to remove</dd>
+</dl>
+
+  <h4>Note</h4>
+
+  <p class="rd-p">This is generally not recommended for HDFS as it writes a new file each time it is called, and can result in more individual files than Hadoop likes to deal with.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#removedata>removeData</a></code>, <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drRead.table
+
+<h3>Data Input</h3>
+
+Reads a text file in table format and creates a distributed data frame from it, with cases corresponding to lines and variables to fields in the file.
+
+<h4>Usage</h4>
+<pre class="r"><code>drReadtable(file, header = FALSE, sep = "", quote = "\"'", dec = ".",
+  skip = 0, fill = !blank.lines.skip, blank.lines.skip = TRUE, comment.char = "#",
+  allowEscapes = FALSE, encoding = "unknown", autoColClasses = TRUE,
+  rowsPerBlock = 50000, postTransFn = identity, output = NULL, overwrite = FALSE,
+  params = NULL, packages = NULL, control = NULL, ...)
+drReadcsv(file, header = TRUE, sep = ",",
+  quote = "\"", dec = ".", fill = TRUE, comment.char = "", ...)
+drReadcsv2(file, header = TRUE, sep = ";",
+  quote = "\"", dec = ",", fill = TRUE, comment.char = "", ...)
+drReaddelim(file, header = TRUE, sep = "\t",
+  quote = "\"", dec = ".", fill = TRUE, comment.char = "", ...)
+drReaddelim2(file, header = TRUE, sep = "\t",
+  quote = "\"", dec = ",", fill = TRUE, comment.char = "", ...)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>file</dt>
+  <dd class="rd-dd">input text file - can either be character string pointing to a file on local disk, or an <code><a href=#hdfsconn>hdfsConn</a></code> object pointing to a text file on HDFS (see <code>output</code> argument below)</dd>
+  <dt>header</dt>
+  <dd class="rd-dd">this and parameters other parameters below are passed to <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for each chunk being processed - see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info.  Most all have defaults or appropriate defaults are set through other format-specific functions such as <code>drRead.csv</code> and <code>drRead.delim</code>.</dd>
+  <dt>sep</dt>
+  <dd class="rd-dd">see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info</dd>
+  <dt>quote</dt>
+  <dd class="rd-dd">see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info</dd>
+  <dt>dec</dt>
+  <dd class="rd-dd">see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info</dd>
+  <dt>skip</dt>
+  <dd class="rd-dd">see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info</dd>
+  <dt>fill</dt>
+  <dd class="rd-dd">see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info</dd>
+  <dt>blank.lines.skip</dt>
+  <dd class="rd-dd">see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info</dd>
+  <dt>comment.char</dt>
+  <dd class="rd-dd">see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info</dd>
+  <dt>allowEscapes</dt>
+  <dd class="rd-dd">see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info</dd>
+  <dt>encoding</dt>
+  <dd class="rd-dd">see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info</dd>
+  <dt>autoColClasses</dt>
+  <dd class="rd-dd">should column classes be determined automatically by reading in a sample?  This can sometimes be problematic because of strange ways R handles quotes in <code>read.table</code>, but keeping the default of <code>TRUE</code> is advantageous for speed.</dd>
+  <dt>rowsPerBlock</dt>
+  <dd class="rd-dd">how many rows of the input file should make up a block (key-value pair) of output?</dd>
+  <dt>postTransFn</dt>
+  <dd class="rd-dd">a function to be applied after a block is read in to provide any additional processingn before the block is stored</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside.  Must be a <code><a href=#localdiskconn>localDiskConn</a></code> object if input is a text file on local disk, or a <code><a href=#hdfsconn>hdfsConn</a></code> object if input is a text file on HDFS.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in <code>postTransFn</code></dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>...</dt>
+  <dd class="rd-dd">see <code><a href=http://www.inside-r.org/r-doc/utils/read.table>read.table</a></code> for more info</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+an object of class "ddf"
+</dl></p>
+
+
+  <h4>Note</h4>
+
+  <p class="rd-p">For local disk, the file is actually read in sequentially instead of in parallel.  This is because of possible performance issues when trying to read from the same disk in parallel.</p>
+
+  <p class="rd-p">Note that if <code>skip</code> is positive and/or if <code>header</code> is <code>TRUE</code>, it will first read these in as they only occur once in the data, and we then check for these lines in each block and remove those lines if they appear.</p>
+
+  <p class="rd-p">Also note that if you supply <code>"Factor"</code> column classes, they will be converted to character.</p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>  csvFile <- file.path(tempdir(), "iris.csv")
+  write.csv(iris, file = csvFile, row.names = FALSE, quote = FALSE)
+  irisTextConn <- localDiskConn(file.path(tempdir(), "irisText2"), autoYes = TRUE)
+  a <- drRead.csv(csvFile, output = irisTextConn, rowsPerBlock = 10)</code></pre>
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## readHDFStextFile
+
+<h3>Experimental HDFS text reader helper function</h3>
+
+Experimental helper function for reading text data on HDFS into a HDFS connection
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>input</dt>
+  <dd class="rd-dd">a RHIPE input text handle created with <code>rhfmt</code></dd>
+  <dt>output</dt>
+  <dd class="rd-dd">an output connection such as those created with <code><a href=#localdiskconn>localDiskConn</a></code>, and <code><a href=#hdfsconn>hdfsConn</a></code></dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>fn</dt>
+  <dd class="rd-dd">function to be applied to each chunk of lines (input to function is a vector of strings)</dd>
+  <dt>keyFn</dt>
+  <dd class="rd-dd">optional function to determine the value of the key for each block</dd>
+  <dt>linesPerBlock</dt>
+  <dd class="rd-dd">how many lines at a time to read</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>update</dt>
+  <dd class="rd-dd">should a MapReduce job be run to obtain additional attributes for the result data prior to returning?</dd>
+</dl>
+
+
+
+
+
+## readTextFileByChunk
+
+<h3>Experimental sequential text reader helper function</h3>
+
+Experimental helper function for reading text data sequentially from a file on disk and adding to connection using <code><a href='addData.html'>addData</a></code>
+
+<h4>Usage</h4>
+<pre class="r"><code>readTextFileByChunk(input, output, overwrite = FALSE, linesPerBlock = 10000,
+  fn = NULL, header = TRUE, skip = 0, recordEndRegex = NULL,
+  cl = NULL)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>input</dt>
+  <dd class="rd-dd">the path to an input text file</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">an output connection such as those created with <code><a href=#localdiskconn>localDiskConn</a></code>, and <code><a href=#hdfsconn>hdfsConn</a></code></dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>linesPerBlock</dt>
+  <dd class="rd-dd">how many lines at a time to read</dd>
+  <dt>fn</dt>
+  <dd class="rd-dd">function to be applied to each chunk of lines (see details)</dd>
+  <dt>header</dt>
+  <dd class="rd-dd">does the file have a header</dd>
+  <dt>skip</dt>
+  <dd class="rd-dd">number of lines to skip before reading</dd>
+  <dt>recordEndRegex</dt>
+  <dd class="rd-dd">an optional regular expression that finds lines in the text file that indicate the end of a record (for multi-line records)</dd>
+  <dt>cl</dt>
+  <dd class="rd-dd">a "cluster" object to be used for parallel processing, created using <code>makeCluster</code></dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">The function <code>fn</code> should have one argument, which should expect to receive a vector of strings, each element of which is a line in the file.  It is also possible for <code>fn</code> to take two arguments, in which case the second argument is the header line from the file (some parsing methods might need to know the header).</p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>csvFile <- file.path(tempdir(), "iris.csv")
+write.csv(iris, file = csvFile, row.names = FALSE, quote = FALSE)
+myoutput <- localDiskConn(file.path(tempdir(), "irisText"), autoYes = TRUE)
+a <- readTextFileByChunk(csvFile,
+  output = myoutput, linesPerBlock = 10,
+  fn = function(x, header) {
+    colNames <- strsplit(header, ",")[[1]]
+    read.csv(textConnection(paste(x, collapse = "\n")), col.names = colNames, header = FALSE)
+  })
+a[[1]]</code></pre>
+
+
+
+## convert
+
+<h3>Convert 'ddo' / 'ddf' Objects</h3>
+
+Convert 'ddo' / 'ddf' objects between different storage backends
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>from</dt>
+  <dd class="rd-dd">a ddo or ddf object</dd>
+  <dt>to</dt>
+  <dd class="rd-dd">a kvConnection object (created with <code><a href=#localdiskconn>localDiskConn</a></code> or <code><a href=#hdfsconn>hdfsConn</a></code>) or <code>NULL</code> if an in-memory ddo / ddf is desired</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">should the data in the location pointed to in <code>to</code> be overwritten?</dd>
+</dl>
+
+
+
+
+
+## as.data.frame.ddf
+
+<h3>Turn 'ddf' Object into Data Frame</h3>
+
+Rbind all the rows of a 'ddf' object into a single data frame
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a ddf object</dd>
+  <dt>row.names</dt>
+  <dd class="rd-dd">passed to <code>as.data.frame</code></dd>
+  <dt>optional</dt>
+  <dd class="rd-dd">passed to <code>as.data.frame</code></dd>
+  <dt>keys</dt>
+  <dd class="rd-dd">should the key be added as a variable in the resulting data frame? (if key is not a character, it will be replaced with a md5 hash)</dd>
+  <dt>splitVars</dt>
+  <dd class="rd-dd">should the values of the splitVars be added as variables in the resulting data frame?</dd>
+  <dt>bsvs</dt>
+  <dd class="rd-dd">should the values of bsvs be added as variables in the resulting data frame?</dd>
+  <dt>...</dt>
+  <dd class="rd-dd">additional arguments passed to as.data.frame</dd>
+</dl>
+
+
+
+
+
+## as.list.ddo
+
+<h3>Turn 'ddo' / 'ddf' Object into a list</h3>
+
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a ddo / ddf object</dd>
+  <dt>...</dt>
+  <dd class="rd-dd">additional arguments passed to <code>as.list</code></dd>
+</dl>
+
+
+
+
+
+## to_ddf
+
+<h3>Convert dplyr grouped_df to ddf</h3>
+
+
+<h4>Usage</h4>
+<pre class="r"><code>to_ddf(x)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a grouped_df object from dplyr</dd>
+</dl>
+
+
+<h4>Examples</h4>
+<pre class="r"><code>library(dplyr)
+bySpecies <- iris %>%
+  group_by(Species) %>%
+  to_ddf()</code></pre>
+
+# Division Independent Methods
+
+
+
+## drAggregate
+
+<h3>Division-Agnostic Aggregation</h3>
+
+Aggregates data by cross-classifying factors, with a formula interface similar to <code>xtabs</code>
+
+<h4>Usage</h4>
+<pre class="r"><code>drAggregate(data, formula, by = NULL, output = NULL, preTransFn = NULL,
+  maxUnique = NULL, params = NULL, packages = NULL, control = NULL)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>data</dt>
+  <dd class="rd-dd">a "ddf" containing the variables in the formula <code>formula</code></dd>
+  <dt>formula</dt>
+  <dd class="rd-dd">a <code><a href=http://www.inside-r.org/r-doc/stats/formula>formula</a></code> object with the cross-classifying variables (separated by +) on the right hand side (or an object which can be coerced to a formula). Interactions are not allowed. On the left hand side, one may optionally give a variable name in the data representing counts; in the latter case, the columns are interpreted as corresponding to the levels of a variable. This is useful if the data have already been tabulated.</dd>
+  <dt>by</dt>
+  <dd class="rd-dd">an optional variable name or vector of variable names by which to split up tabulations (i.e. tabulate independently inside of each unique "by" variable value).  The only difference between specifying "by" and placing the variable(s) in the right hand side of the formula is how the computation is done and how the result is returned.</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">"kvConnection" object indicating where the output data should reside in the case of <code>by</code> being specified (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>preTransFn</dt>
+  <dd class="rd-dd">an optional function to apply to each subset prior to performing tabulation.  The output from this function should be a data frame containing variables with names that match that of the formula provided.  Note: this is deprecated - instead use <code><a href=#addtransform>addTransform</a></code> prior to calling divide.</dd>
+  <dt>maxUnique</dt>
+  <dd class="rd-dd">the maximum number of unique combinations of variables to obtain tabulations for.  This is meant to help against cases where a variable in the formula has a very large number of levels, to the point that it is not meaningful to tabulate and is too computationally burdonsome.  If <code>NULL</code>, it is ignored.  If a positive number, only the top and bottom <code>maxUnique</code> tabulations by frequency are kept.</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a data frame of the tabulations.  When "by" is specified, it is a ddf with each key-value pair corresponding to a unique "by" value, containing a data frame of tabulations.
+</dl></p>
+
+
+  <h4>Note</h4>
+
+  <p class="rd-p">The interface is similar to <code><a href=http://www.inside-r.org/r-doc/stats/xtabs>xtabs</a></code>, but instead of returning a full contingency table, data is returned in the form of a data frame only with rows for which there were positive counts.  This result is more similar to what is returned by <code><a href=http://www.inside-r.org/r-doc/stats/aggregate>aggregate</a></code>.</p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>drAggregate(Sepal.Length ~ Species, data = ddf(iris))</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=http://www.inside-r.org/r-doc/stats/xtabs>xtabs</a></code>, <code><a href=#updateattributes>updateAttributes</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drHexbin
+
+<h3>HexBin Aggregation for Distributed Data Frames</h3>
+
+Create "hexbin" object of hexagonally binned data for a distributed data frame.  This computation is division agnostic - it does not matter how the data frame is split up.
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>data</dt>
+  <dd class="rd-dd">a distributed data frame</dd>
+  <dt>xVar,yVar</dt>
+  <dd class="rd-dd">names of the variables to use</dd>
+  <dt>xTransFn,yTransFn</dt>
+  <dd class="rd-dd">a transformation function to apply to the x and y variables prior to binning</dd>
+  <dt>xRange,yRange</dt>
+  <dd class="rd-dd">range of x and y variables (can be left blank if summaries have been computed)</dd>
+  <dt>xbins</dt>
+  <dd class="rd-dd">the number of bins partitioning the range of xbnds</dd>
+  <dt>shape</dt>
+  <dd class="rd-dd">the shape = yheight/xwidth of the plotting regions</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a "hexbin" object
+</dl></p>
+
+
+  <h4>References</h4>
+
+  <p class="rd-p">Carr, D. B. et al. (1987) Scatterplot Matrix Techniques for Large <code class = eq>N</code>. <em>JASA</em> <b>83</b>, 398, 424--436.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#drquantile>drQuantile</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drQuantile
+
+<h3>Sample Quantiles for 'ddf' Objects</h3>
+
+Compute sample quantiles for 'ddf' objects
+
+<h4>Usage</h4>
+<pre class="r"><code>drQuantile(x, var, by = NULL, probs = seq(0, 1, 0.005), preTransFn = NULL,
+  varTransFn = identity, varRange = NULL, nBins = 10000, tails = 100,
+  params = NULL, packages = NULL, control = NULL, ...)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a ddf object</dd>
+  <dt>var</dt>
+  <dd class="rd-dd">the name of the variable to compute quantiles for</dd>
+  <dt>by</dt>
+  <dd class="rd-dd">an optional variable name or vector of variable names by which to group quantile computations</dd>
+  <dt>probs</dt>
+  <dd class="rd-dd">numeric vector of probabilities with values in [0-1]</dd>
+  <dt>preTransFn</dt>
+  <dd class="rd-dd">a transformation function (if desired) to applied to each subset prior to computing quantiles (here it may be useful for adding a "by" variable that is not present) - note: this transformation should not modify <code>var</code> (use <code>varTransFn</code> for that) - also note: this is deprecated - instead use <code><a href=#addtransform>addTransform</a></code> prior to calling divide</dd>
+  <dt>varTransFn</dt>
+  <dd class="rd-dd">transformation to apply to variable prior to computing quantiles</dd>
+  <dt>varRange</dt>
+  <dd class="rd-dd">range of x (can be left blank if summaries have been computed)</dd>
+  <dt>nBins</dt>
+  <dd class="rd-dd">how many bins should the range of the variable be split into?</dd>
+  <dt>tails</dt>
+  <dd class="rd-dd">how many exact values at each tail should be retained?</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>...</dt>
+  <dd class="rd-dd">additional arguments</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This division-agnostic quantile calculation algorithm takes the range of the variable of interest and splits it into <code>nBins</code> bins, tabulates counts for those bins, and reconstructs a quantile approximation from them.  <code>nBins</code> should not get too large, but larger <code>nBins</code> gives more accuracy.  If <code>tails</code> is positive, the first and last <code>tails</code> ordered values are attached to the quantile estimate - this is useful for long-tailed distributions or distributions with outliers for which you would like more detail in the tails.</p>
+
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+data frame of quantiles <code>q</code> and their associated f-value <code>fval</code>.  If <code>by</code> is specified, then also a variable <code>group</code>.
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code># break the iris data into k/v pairs
+irisSplit <- list(
+  list("1", iris[1:10,]), list("2", iris[11:110,]), list("3", iris[111:150,])
+)
+# represent it as ddf
+irisSplit <- ddf(irisSplit, update = TRUE)
+
+# approximate quantiles over the divided data set
+probs <- seq(0, 1, 0.005)
+iq <- drQuantile(irisSplit, var = "Sepal.Length", tails = 0, probs = probs)
+plot(iq$fval, iq$q)
+
+# compare to the all-data quantile "type 1" result
+plot(probs, quantile(iris$Sepal.Length, probs = probs, type = 1))</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#updateattributes>updateAttributes</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+# Data Operations
+
+
+
+## drFilter
+
+<h3>Filter a 'ddo' or 'ddf' Object</h3>
+
+Filter a 'ddo' or 'ddf' object
+
+<h4>Usage</h4>
+<pre class="r"><code>drFilter(x, filterFn, output = NULL, overwrite = FALSE, params = NULL,
+  packages = NULL, control = NULL)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">an object of class ddo or ddf</dd>
+  <dt>filterFn</dt>
+  <dd class="rd-dd">function that takes a key or key-value pair and returns either <code>TRUE</code> or <code>FALSE</code> - if <code>TRUE</code>, that key-value pair will be present in the result. See examples for details.</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>filterFn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a ddo or ddf object
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
+drFilter(bySpecies, function(v) mean(v$Sepal.Width) < 3)
+drFilter(bySpecies, function(k,v) k != "Species=virginica" & mean(v$Sepal.Width) < 3)</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#drjoin>drJoin</a></code>, <code><a href=#drlapply>drLapply</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drJoin
+
+<h3>Join Two Data Sources by Key</h3>
+
+Join two data sources by key
+
+<h4>Usage</h4>
+<pre class="r"><code>drJoin(..., output = NULL, overwrite = FALSE, postTransFn = NULL,
+  params = NULL, packages = NULL, control = NULL)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>postTransFn</dt>
+  <dd class="rd-dd">an optional function to be applied to the each final key-value pair after joining</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>...</dt>
+  <dd class="rd-dd">named lists of input objects - assumed that all are of same type (all HDFS, all localDisk, all in-memory)</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a ddo object stored in the <code>output</code> connection, where the values are named lists with names according to the names given to the input data objects, and values are the corresponding data
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
+# get independent lists of just SW and SL
+sw <- drLapply(bySpecies, function(x) x$Sepal.Width)
+sl <- drLapply(bySpecies, function(x) x$Sepal.Length)
+drJoin(Sepal.Width = sw, Sepal.Length = sl, postTransFn = as.data.frame)</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#drfilter>drFilter</a></code>, <code><a href=#drlapply>drLapply</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drLapply
+
+<h3>Apply a function to all key-value pairs of a ddo/ddf object</h3>
+
+Apply a function to all key-value pairs of a ddo/ddf object and get a new ddo object back, unless a different <code>combine</code> strategy is specified.
+
+<h4>Usage</h4>
+<pre class="r"><code>drLapply(X, FUN, combine = combDdo(), output = NULL, overwrite = FALSE,
+  params = NULL, packages = NULL, control = NULL, verbose = TRUE)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>X</dt>
+  <dd class="rd-dd">an object of class "ddo" of "ddf"</dd>
+  <dt>FUN</dt>
+  <dd class="rd-dd">a function to be applied to each subset</dd>
+  <dt>combine</dt>
+  <dd class="rd-dd">optional method to combine the results</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+depends on <code>combine</code>
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
+drLapply(bySpecies, function(x) x$Sepal.Width)</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#recombine>recombine</a></code>, <code><a href=#drfilter>drFilter</a></code>, <code><a href=#drjoin>drJoin</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combrbind>combRbind</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drSample
+
+<h3>Take a Sample of Key-Value Pairs
+Take a sample of key-value Pairs</h3>
+
+
+<h4>Usage</h4>
+<pre class="r"><code>drSample(x, fraction, output = NULL, overwrite = FALSE, control = NULL)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a ddo or ddf object</dd>
+  <dt>fraction</dt>
+  <dd class="rd-dd">fraction of key-value pairs to keep (between 0 and 1)</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+</dl>
+
+
+<h4>Examples</h4>
+<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
+set.seed(234)
+sampleRes <- drSample(bySpecies, fraction = 0.25)</code></pre>
+
+
+
+## drSubset
+
+<h3>Subsetting Distributed Data Frames</h3>
+
+Return a subset of a "ddf" object to memory
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>data</dt>
+  <dd class="rd-dd">object to be subsetted -- an object of class "ddf" or "ddo" - in the latter case, need to specify <code>preTransFn</code> to coerce each subset into a data frame</dd>
+  <dt>subset</dt>
+  <dd class="rd-dd">logical expression indicating elements or rows to keep: missing values are taken as false</dd>
+  <dt>select</dt>
+  <dd class="rd-dd">expression, indicating columns to select from a data frame</dd>
+  <dt>drop</dt>
+  <dd class="rd-dd">passed on to [ indexing operator</dd>
+  <dt>preTransFn</dt>
+  <dd class="rd-dd">a transformation function (if desired) to applied to each subset prior to division - note: this is deprecated - instead use <code><a href=#addtransform>addTransform</a></code> prior to calling divide</dd>
+  <dt>maxRows</dt>
+  <dd class="rd-dd">the maximum number of rows to return</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+data frame
+</dl></p>
+
+
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+# Division
+
+
+
+## divide
+
+<h3>Divide a Distributed Data Object</h3>
+
+Divide a ddo/ddf object into subsets based on different criteria
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>data</dt>
+  <dd class="rd-dd">an object of class "ddf" or "ddo" - in the latter case, need to specify <code>preTransFn</code> to coerce each subset into a data frame</dd>
+  <dt>by</dt>
+  <dd class="rd-dd">specification of how to divide the data - conditional (factor-level or shingles), random replicate, or near-exact replicate (to come) -- see details</dd>
+  <dt>spill</dt>
+  <dd class="rd-dd">integer telling the division method how many lines of data should be collected until spilling over into a new key-value pair</dd>
+  <dt>filterFn</dt>
+  <dd class="rd-dd">a function that is applied to each candidate output key-value pair to determine whether it should be (if returns <code>TRUE</code>) part of the resulting division</dd>
+  <dt>bsvFn</dt>
+  <dd class="rd-dd">a function to be applied to each subset that returns a list of between subset variables (BSVs)</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>preTransFn</dt>
+  <dd class="rd-dd">a transformation function (if desired) to applied to each subset prior to division - note: this is deprecated - instead use <code><a href=#addtransform>addTransform</a></code> prior to calling divide</dd>
+  <dt>postTransFn</dt>
+  <dd class="rd-dd">a transformation function (if desired) to apply to each post-division subset</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>update</dt>
+  <dd class="rd-dd">should a MapReduce job be run to obtain additional attributes for the result data prior to returning?</dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">The division methods this function will support include conditioning variable division for factors (implemented -- see <code><a href=#conddiv>condDiv</a></code>), conditioning variable division for numerical variables through shingles, random replicate (implemented -- see <code><a href=#rrdiv>rrDiv</a></code>), and near-exact replicate.  If <code>by</code> is a vector of variable names, the data will be divided by these variables.  Alternatively, this can be specified by e.g.  <code>condDiv(c("var1", "var2"))</code>.</p>
+
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+an object of class "ddf" if the resulting subsets are data frames.  Otherwise, an object of class "ddo".
+</dl></p>
+
+
+  <h4>References</h4>
+
+  <p class="rd-p"><ul>
+<li> <a href = http://www.datadr.org>http://www.datadr.org</a>
+ </li>
+<li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
+</li>
+</ul></p>
+
+  <p class="rd-p"></p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#recombine>recombine</a></code>, <code><a href=#ddo>ddo</a></code>, <code><a href=#ddf>ddf</a></code>, <code><a href=#conddiv>condDiv</a></code>, <code><a href=#rrdiv>rrDiv</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## condDiv
+
+<h3>Conditioning Variable Division</h3>
+
+Specify conditioning variable division parameters for data division
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>vars</dt>
+  <dd class="rd-dd">a character string or vector of character strings specifying the variables of the input data across which to divide</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">Currently each unique combination of values of <code>vars</code> constitutes a subset.  In the future, specifying shingles for numeric conditioning variables will be implemented.</p>
+
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a list to be used for the "by" argument to <code><a href=#divide>divide</a></code>
+</dl></p>
+
+
+  <h4>References</h4>
+
+  <p class="rd-p"><ul>
+<li> <a href = http://www.datadr.org>http://www.datadr.org</a>
+ </li>
+<li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
+</li>
+</ul></p>
+
+  <p class="rd-p"></p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#getsplitvars>getSplitVars</a></code>, <code><a href=#getsplitvar>getSplitVar</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## rrDiv
+
+<h3>Random Replicate Division</h3>
+
+Specify random replicate division parameters for data division
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>nrows</dt>
+  <dd class="rd-dd">number of rows each subset should have</dd>
+  <dt>seed</dt>
+  <dd class="rd-dd">the random seed to use (experimental)</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">The random replicate division method currently gets the total number of rows of the input data and divides it by <code>nrows</code> to get the number of subsets.  Then it randomly assigns each row of the input data to one of the subsets, resulting in subsets with approximately <code>nrows</code> rows.  A future implementation will make each subset have exactly <code>nrows</code> rows.</p>
+
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a list to be used for the "by" argument to <code><a href=#divide>divide</a></code>
+</dl></p>
+
+
+  <h4>References</h4>
+
+  <p class="rd-p"><ul>
+<li> <a href = http://www.datadr.org>http://www.datadr.org</a>
+ </li>
+<li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
+</li>
+</ul></p>
+
+  <p class="rd-p"></p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#conddiv>condDiv</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+# Transformations
+
+
+
+## addTransform
+
+<h3>Add a Transformation Function to a Distributed Data Object</h3>
+
+Add a transformation function to be applied to each subset of a distributed data object
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>obj</dt>
+  <dd class="rd-dd">a distributed data object</dd>
+  <dt>fn</dt>
+  <dd class="rd-dd">a function to be applied to each subset of <code>obj</code> - see details</dd>
+  <dt>name</dt>
+  <dd class="rd-dd">optional name of the transformation</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to <code>obj</code> that are needed in the transformation function (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">When you add a transformation to a distributed data object, the transformation is not applied immediately, but is deferred until a function that kicks off a computation is done.  These include <code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#drjoin>drJoin</a></code>, <code><a href=#drlapply>drLapply</a></code>, <code><a href=#drfilter>drFilter</a></code>, <code><a href=#drsample>drSample</a></code>, <code>drSubset</code>.  When any of these are invoked on an object with a transformation attached to it, the transformation will be applied in the map phase of the MapReduce computation prior to any other computation.  The transformation will also be applied any time a subset of the data is requested.  Thus although the data has not been physically transformed after a call of <code>addTransform</code>, we can think of it conceptually as already being transformed.</p>
+
+  <p class="rd-p">The function provided by <code>fn</code> can either accept one or two parameters.  If it accepts one parameter, the value of a key-value pair is passed in.  It if accepts two parameters, it is passed the key as the first parameter and the value as the second parameter.  The return value of <code>fn</code> is treated as a value of a key-value pair unless the return type comes from <code><a href=#kvpair>kvPair</a></code>.</p>
+
+  <p class="rd-p">When <code>addTransform</code> is called, it is tested on a subset of the data to make sure we have all of the necessary global variables and packages loaded necessary to portably perform the transformation.</p>
+
+  <p class="rd-p">It is possible to add multiple transformations to a distributed data object, in which case they are applied in the order supplied, but only one transform should be necessary.</p>
+
+
+
+
+
+
+## applyTransform
+
+<h3>Applies the transformation function(s)</h3>
+
+This is called internally in the map phase of datadr MapReduce jobs.  It is not meant for use outside of there, but is exported for convenience.
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>transFns</dt>
+  <dd class="rd-dd">from the "transforms" attribute of a ddo object</dd>
+  <dt>x</dt>
+  <dd class="rd-dd">a subset of the object</dd>
+  <dt>env</dt>
+  <dd class="rd-dd">the environment in which to evaluate the function (should be instantiated from calling <code><a href=#setuptransformenv>setupTransformEnv</a></code>) - if <code>NULL</code>, the environment will be set up for you</dd>
+</dl>
+
+
+
+
+
+## setupTransformEnv
+
+<h3>Set up transformation environment</h3>
+
+This is called internally in the map phase of datadr MapReduce jobs.  It is not meant for use outside of there, but is exported for convenience.
+Given an environment and collection of transformations, it populates the environment with the global variables in the transformations.
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>transFns</dt>
+  <dd class="rd-dd">from the "transforms" attribute of a ddo object</dd>
+  <dt>env</dt>
+  <dd class="rd-dd">the environment in which to evaluate the transformations</dd>
+</dl>
+
+
+
+
+
+## drPersist
+
+<h3>Persist a Transformed 'ddo' or 'ddf' Object</h3>
+
+Persist a transformed 'ddo' or 'ddf' object
+
+<h4>Usage</h4>
+<pre class="r"><code>drPersist(x, output = NULL, overwrite = FALSE, control = NULL)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">an object of class ddo or ddf</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a ddo or ddf object
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
+bySpeciesSepal <- bySpecies %>%
+ addTransform(function(x) x[,c("Sepal.Length", "Sepal.Width")]) %>%
+ drPersist()</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#addtransform>addTransform</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+# Recombination
+
+
+
+## recombine
+
+<h3>Recombine</h3>
+
+Apply an analytic recombination method to a ddo/ddf object and combine the results
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>data</dt>
+  <dd class="rd-dd">an object of class "ddo" of "ddf"</dd>
+  <dt>combine</dt>
+  <dd class="rd-dd">the method to combine the results</dd>
+  <dt>apply</dt>
+  <dd class="rd-dd">a function specifying the analytic method to apply to each subset, or a pre-defined apply function (see <code><a href=#drblb>drBLB</a></code>, <code><a href=#drglm>drGLM</a></code>, for example)</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+depends on <code>combine</code>
+</dl></p>
+
+
+  <h4>References</h4>
+
+  <p class="rd-p"><ul>
+<li> <a href = http://www.datadr.org>http://www.datadr.org</a>
+ </li>
+<li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
+</li>
+</ul></p>
+
+  <p class="rd-p"></p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#ddo>ddo</a></code>, <code><a href=#ddf>ddf</a></code>, <code><a href=#drglm>drGLM</a></code>, <code><a href=#drblb>drBLB</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combmean>combMean</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#drlapply>drLapply</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drBLB
+
+<h3>Bag of Little Bootstraps Transformation Method</h3>
+
+Bag of little bootstraps transformation method
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a subset of a ddf</dd>
+  <dt>statistic</dt>
+  <dd class="rd-dd">a function to apply to the subset specifying the statistic to compute.  Must have arguments data and weights - see details).  Must return a vector, where each element is a statistic of interest.</dd>
+  <dt>metric</dt>
+  <dd class="rd-dd">a function specifying the metric to be applied to the <code>R</code> bootstrap samples of each statistic returned by <code>statistic</code>.  Expects an input vector and should output a vector.</dd>
+  <dt>R</dt>
+  <dd class="rd-dd">the number of bootstrap samples</dd>
+  <dt>n</dt>
+  <dd class="rd-dd">the total number of observations in the data</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">It is necessary to specify <code>weights</code> as a parameter to the <code>statistic</code> function because for BLB to work efficiently, it must resample each time with a sample of size <code>n</code>.  To make this computationally possible for very large <code>n</code>, we can use <code>weights</code> (see reference for details).  Therefore, only methods with a weights option can legitimately be used here.</p>
+
+
+  <h4>References</h4>
+
+  <p class="rd-p">BLB paper</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drGLM
+
+<h3>GLM Transformation Method</h3>
+
+GLM transformation method
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">arguments you would pass to the <code><a href=http://www.inside-r.org/r-doc/stats/glm>glm</a></code> function</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This provides a transformation function to be called for each subset in a recombination MapReduce job that applies Rs glm method and outputs the coefficients in a way that <code><a href=#combmeancoef>combMeanCoef</a></code> knows how to deal with.  It can be applied to a ddf with <code><a href=#addtransform>addTransform</a></code> prior to calling <code><a href=#recombine>recombine</a></code>.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#rrdiv>rrDiv</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## combCollect
+
+<h3>"Collect" Recombination</h3>
+
+"Collect" recombination - simply collect the results into a local list of key-value pairs
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">...</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This is an experimental prototype.  It is to be passed as the argument <code>combine</code> to <code><a href=#recombine>recombine</a></code>.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combmean>combMean</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## combDdo
+
+<h3>"DDO" Recombination</h3>
+
+"DDO" recombination - simply collect the results into a "ddo" object
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">...</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This is an experimental prototype.  It is to be passed as the argument <code>combine</code> to <code><a href=#recombine>recombine</a></code>.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combmean>combMean</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## combMean
+
+<h3>Mean Recombination</h3>
+
+Mean recombination
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">...</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This is an experimental prototype.  It is to be passed as the argument <code>combine</code> to <code><a href=#recombine>recombine</a></code>.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## combMeanCoef
+
+<h3>Mean Coefficient Recombination</h3>
+
+Mean coefficient recombination
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">...</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This is an experimental prototype.  It is to be passed as the argument <code>combine</code> to <code><a href=#recombine>recombine</a></code>.  It expects to be dealing with named vectors including an element <code>n</code> specifying the number of rows in that subset.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#rrdiv>rrDiv</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combmean>combMean</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## combRbind
+
+<h3>"rbind" Recombination</h3>
+
+"rbind" recombination
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">...</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This is an experimental prototype.  It is to be passed as the argument <code>combine</code> to <code><a href=#recombine>recombine</a></code>.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combmean>combMean</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+# MapReduce
+
+
+
+## mrExec
+
+<h3>Execute a MapReduce Job</h3>
+
+Execute a MapReduce job
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>data</dt>
+  <dd class="rd-dd">a ddo/ddf object, or list of ddo/ddf objects</dd>
+  <dt>setup</dt>
+  <dd class="rd-dd">an expression of R code (created using the R command <code>expression</code>) to be run before map and reduce</dd>
+  <dt>map</dt>
+  <dd class="rd-dd">an R expression that is evaluated during the map stage. For each task, this expression is executed multiple times (see details).</dd>
+  <dt>reduce</dt>
+  <dd class="rd-dd">a vector of R expressions with names pre, reduce, and post that is evaluated during the reduce stage. For example <code>reduce = expression(pre = {...}, reduce = {...}, post = {...})</code>. reduce is optional, and if not specified the map output key-value pairs will be the result. If it is not specified, then a default identity reduce is performed. Setting it to 0 will skip the reduce altogether.</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.  If a character string, it will be treated as a path to be passed to the same type of connection as <code>data</code> - relative paths will be relative to the working directory of that back end.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the map or reduce phases</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+"ddo" object - to keep it simple.  It is up to the user to update or cast as "ddf" if that is the desired result.
+</dl></p>
+
+
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+# Misc
+
+
+
+## flatten
+
+<h3>"Flatten" a ddf Subset</h3>
+
+Add split variables and BSVs (if any) as columns to a subset of a ddf.
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a value of a key-value pair</dd>
+</dl>
+
+
+
+<h4>See also</h4>
+
+<code><a href=#getsplitvars>getSplitVars</a></code>, <code><a href=#getbsvs>getBsvs</a></code>
+
+
+
+
+## bsv
+
+<h3>Construct Between Subset Variable (BSV)</h3>
+
+Construct between subset variable (BSV)
+
+<h4>Usage</h4>
+<pre class="r"><code>bsv(val = NULL, desc = "")</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>val</dt>
+  <dd class="rd-dd">a scalar character, numeric, or date</dd>
+  <dt>desc</dt>
+  <dd class="rd-dd">a character string describing the BSV</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">Should be called inside the <code>bsvFn</code> argument to <code>divide</code> used for constructing a BSV list for each subset of a division.</p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>irisDdf <- ddf(iris)
+
+bsvFn <- function(dat) {
+  list(
+    meanSL = bsv(mean(dat$Sepal.Length), desc = "mean sepal length"),
+    meanPL = bsv(mean(dat$Petal.Length), desc = "mean petal length")
+  )
+}
+
+# divide the data by species
+bySpecies <- divide(irisDdf, by = "Species", bsvFn = bsvFn)
+# see BSV info attached to the result
+bsvInfo(bySpecies)
+# get BSVs for a specified subset of the division
+getBsvs(bySpecies[[1]])</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#getbsvs>getBsvs</a></code>, <code><a href=#ddo-ddf-accessors>bsvInfo</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drGetGlobals
+
+<h3>Get Global Variables and Package Dependencies</h3>
+
+Get global variables and package dependencies for a function
+
+<h4>Usage</h4>
+<pre class="r"><code>drGetGlobals(f)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>f</dt>
+  <dd class="rd-dd">function</dd>
+</dl>
+
+  <h4>Details</h4>
+
+  <p class="rd-p">This traverses the parent environments of the supplied function and finds all global variables using <code><a href=http://www.inside-r.org/r-doc/codetools/findGlobals>findGlobals</a></code> and retrieves their values.  All package function calls are also found and a list of required packages is also returned.</p>
+
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a list of variables (named by variable) and a vector of package names
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>a <- 1
+f <- function(x) x + a
+drGetGlobals(f)</code></pre>
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## divide-internals
+
+<h3>Functions used in divide()</h3>
+
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>curDF,seed</dt>
+  <dd class="rd-dd">arguments</dd>
+  <dt>curSplit,bsvFn,by,postTransFn</dt>
+  <dd class="rd-dd">arguments</dd>
+</dl>
+
+  <h4>Note</h4>
+
+  <p class="rd-p">These functions can be ignored.  They are only exported to make their use in a distributed setting more convenient.</p>
+
+
+
+
+
+
+## makeExtractable
+
+<h3>Take a ddo/ddf HDFS data object and turn it into a mapfile</h3>
+
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>obj</dt>
+  <dd class="rd-dd">object of class ddo or ddf with an HDFS connection</dd>
+</dl>
+
+
+
+
+
+## mr-summary-stats
+
+<h3>Functions to Compute Summary Statistics in MapReduce</h3>
+
+Functions that are used to tabulate categorical variables and compute moments for numeric variables inside through the MapReduce framework.  Used in <code><a href='updateAttributes.html'>updateAttributes</a></code>.
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>formula</dt>
+  <dd class="rd-dd">a formula to be used in <code><a href=http://www.inside-r.org/r-doc/stats/xtabs>xtabs</a></code></dd>
+  <dt>data</dt>
+  <dd class="rd-dd">a subset of a ddf object</dd>
+  <dt>result,reduce.values</dt>
+  <dd class="rd-dd">inconsequential <code>tabulateReduce</code> parameters</dd>
+  <dt>maxUnique</dt>
+  <dd class="rd-dd">the maximum number of unique combinations of variables to obtaion tabulations for.  This is meant to help against cases where a variable in the formula has a very large number of levels, to the point that it is not meaningful to tabulate and is too computationally burdonsome.  If <code>NULL</code>, it is ignored.  If a positive number, only the top and bottom <code>maxUnique</code> tabulations by frequency are kept.</dd>
+  <dt>y,order,na.rm</dt>
+  <dd class="rd-dd">inconsequential <code>calculateMoments</code> parameters</dd>
+  <dt>m1,m2</dt>
+  <dd class="rd-dd">inconsequential <code>combineMoments</code> parameters</dd>
+  <dt>m</dt>
+  <dd class="rd-dd">inconsequential <code>moments2statistics</code> parameters</dd>
+  <dt>...</dt>
+  <dd class="rd-dd">inconsequential parameters</dd>
+</dl>
+
+
+
+
+
+## getCondCuts
+
+<h3>Get names of the conditioning variable cuts</h3>
+
+Used internally for exported for certain reasons.  Do not use explicitly.
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>df</dt>
+  <dd class="rd-dd">a data frame</dd>
+  <dt>splitVars</dt>
+  <dd class="rd-dd">a vector of variable names to split by</dd>
+</dl>
+
+
+
+
+
+## getSplitVar
+
+<h3>Extract "Split" Variable</h3>
+
+For a given key-value pair or value, get a split variable value by name, if present (split variables are variables that define how the data was divided).
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a key-value pair or a value</dd>
+  <dt>name</dt>
+  <dd class="rd-dd">the name of the split variable to get</dd>
+</dl>
+
+
+
+
+
+## getSplitVars
+
+<h3>Extract "Split" Variables</h3>
+
+For a given k/v pair or value, exract all split variables (split variables are variables that define how the data was divided).
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a key-value pair or a value</dd>
+</dl>
+
+
+
+
+
+## getBsv
+
+<h3>Get Between Subset Variable</h3>
+
+For a given key-value pair, get a BSV variable value by name (if present)
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a key-value pair or a value</dd>
+  <dt>name</dt>
+  <dd class="rd-dd">the name of the BSV to get</dd>
+</dl>
+
+
+
+
+
+## getBsvs
+
+<h3>Get Between Subset Variables</h3>
+
+For a given key-value pair, exract all BSVs
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a key-value pair or a value</dd>
+</dl>
+
+
+
+
+
+## adult
+
+<h3>"Census Income" Dataset</h3>
+
+"Census Income" dataset from UCI machine learning repository
+
+  <h4>Format</h4>
+
+  <p class="rd-p">(From UCI machine learning repository)</p>
+
+  <p class="rd-p"><ul>
+<li> age. continuous
+  </li>
+<li> workclass. Private, Self-emp-not-inc, Self-emp-inc, Federal-gov, Local-gov, State-gov, Without-pay, Never-worked
+  </li>
+<li> fnlwgt. continuous
+  </li>
+<li> education. Bachelors, Some-college, 11th, HS-grad, Prof-school, Assoc-acdm, Assoc-voc, 9th, 7th-8th, 12th, Masters, 1st-4th, 10th, Doctorate, 5th-6th, Preschool
+  education-num: continuous
+  </li>
+<li> marital. Married-civ-spouse, Divorced, Never-married, Separated, Widowed, Married-spouse-absent, Married-AF-spouse
+  </li>
+<li> occupation. Tech-support, Craft-repair, Other-service, Sales, Exec-managerial, Prof-specialty, Handlers-cleaners, Machine-op-inspct, Adm-clerical, Farming-fishing, Transport-moving, Priv-house-serv, Protective-serv, Armed-Forces
+  </li>
+<li> relationship. Wife, Own-child, Husband, Not-in-family, Other-relative, Unmarried
+  </li>
+<li> race. White, Asian-Pac-Islander, Amer-Indian-Eskimo, Other, Black
+  </li>
+<li> sex. Female, Male
+  </li>
+<li> capgain. continuous
+  </li>
+<li> caploss. continuous
+  </li>
+<li> hoursperweek. continuous
+  </li>
+<li> nativecountry. United-States, Cambodia, England, Puerto-Rico, Canada, Germany, Outlying-US(Guam-USVI-etc), India, Japan, Greece, South, China, Cuba, Iran, Honduras, Philippines, Italy, Poland, Jamaica, Vietnam, Mexico, Portugal, Ireland, France, Dominican-Republic, Laos, Ecuador, Taiwan, Haiti, Columbia, Hungary, Guatemala, Nicaragua, Scotland, Thailand, Yugoslavia, El-Salvador, Trinadad&Tobago, Peru, Hong, Holand-Netherlands
+  </li>
+<li> income. <=50K, >50K
+  </li>
+<li> incomebin. 0 if income<=50K, 1 if income>50K
+</li>
+</ul></p>
+
+
+  <h4>&quot;Census Income&quot; Dataset</h4>
+
+
+  <h4>References</h4>
+
+  <p class="rd-p">Bache, K. & Lichman, M. (2013). UCI Machine Learning Repository [<a href = http://archive.ics.uci.edu/ml>http://archive.ics.uci.edu/ml</a>]. Irvine, CA: University of California, School of Information and Computer Science.</p>
+
+
+
+
+

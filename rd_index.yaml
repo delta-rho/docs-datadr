@@ -1,0 +1,109 @@
+-
+  section_name: Key-Value Pairs
+  description:
+  topics:
+    - kvPair
+    - kvPairs
+    - print.kvPair
+    - print.kvValue
+    - kvApply
+-
+  section_name: Distributed data objects
+  description:
+  topics:
+    - ddo
+    - ddf
+    - updateAttributes
+    - ddf-accessors
+    - ddo-ddf-accessors
+    - ddo-ddf-attributes
+    - print.ddo
+-
+  section_name: Back End Connections
+  description:
+  topics:
+    - localDiskConn
+    - digestFileHash
+    - charFileHash
+    - localDiskControl
+    - hdfsConn
+    - rhipeControl
+    - sparkControl
+    - sparkDataConn
+-
+  section_name: Data I/O
+  description:
+  topics:
+    - addData
+    - removeData
+    - drRead.table
+    - readHDFStextFile
+    - readTextFileByChunk
+    - convert
+    - as.data.frame.ddf
+    - as.list.ddo
+    - to_ddf
+-
+  section_name: Division Independent Methods
+  description:
+  topics:
+    - drAggregate
+    - drHexbin
+    - drQuantile
+-
+  section_name: Data Operations
+  description:
+  topics:
+    - drFilter
+    - drJoin
+    - drLapply
+    - drSample
+    - drSubset
+-
+  section_name: Division
+  description:
+  topics:
+    - divide
+    - condDiv
+    - rrDiv
+-
+  section_name: Transformations
+  description:
+  topics:
+    - addTransform
+    - applyTransform
+    - setupTransformEnv
+    - drPersist
+-
+  section_name: Recombination
+  description:
+  topics:
+    - recombine
+    - drBLB
+    - drGLM
+    - combCollect
+    - combDdo
+    - combMean
+    - combMeanCoef
+    - combRbind
+-
+  section_name: MapReduce
+  description:
+  topics:
+    - mrExec
+-
+  section_name: Misc
+  description:
+  topics:
+    - flatten
+    - bsv
+    - drGetGlobals
+    - divide-internals
+    - makeExtractable
+    - mr-summary-stats
+    - getCondCuts
+    - getSplitVar
+    - getSplitVars
+    - getBsv
+    - getBsvs
+    - adult

@@ -1,66 +1,75 @@
-## Dealing with Data in D&R ##
+# Dealing with Data in D&R
 
-### Key-Value Pairs ###
+## Key-Value Pairs
 
-In D&R, data is partitioned into subsets.  Each subset is represented as a *key-value pair*.  Collections of key-value pairs are *distributed data objects (ddo)*, or in the case of the value being a data frame, *distributed data frames (ddf)*, and form the basic input and output types for all D&R operations.  This section introduces these concepts and illustrates how they are used in `datadr`.
+In D&R, data is partitioned into subsets.  Each subset is represented as a *key-value pair*.  Collections of key-value pairs are *distributed data objects (ddo)*, or in the case of the value being a data frame, *distributed data frames (ddf)*, and form the basic input and output types for all D&R operations.  This section introduces these concepts and illustrates how they are used in datadr.
 
-#### Key-value pairs in `datadr`
+### Key-value pairs in datadr
 
-In `datadr`, key-value pairs are R lists with two elements, one for the key and one for the value.  For example,
+In datadr, key-value pairs are R lists with two elements, one for the key and one for the value.  For example,
 
 ```{r kv_pair_example}
 # simple key-value pair example
 list(1:5, rnorm(10))
 ```
 
-is a key-value pair with integers 1-5 as the key and 10 random normals as the value.  Typically, a key is used as a unique identifier for the value.  For `datadr` it is recommended to make the key a simple string when possible.
+is a key-value pair with integers 1-5 as the key and 10 random normals as the value.  Typically, a key is used as a unique identifier for the value.  For datadr it is recommended to make the key a simple string when possible.
 
-#### Key-value pair collections
+There is a convenience function `r rdl("kvPair()")` for specifying a key-value pair:
 
-D&R data objects are made up of collections of key-value pairs.  In `datadr`, these are represented as lists of key-value pair lists.  As an example, consider the iris data set, which consists of measurements of 4 aspects for 50 flowers from each of 3 species of iris.  Suppose we would like to split the data into key-value pairs by species.  We can do this by passing key-value pairs to a function `kvPairs()`:
+```{r kv_pair_example2}
+# using kvPair
+kvPair(1:5, rnorm(10))
+```
+
+This provides names for the list elements and is a useful function when an operation must explicitly know that it is dealing with a key-value pair and not just a list.
+
+### Key-value pair collections
+
+D&R data objects are made up of collections of key-value pairs.  In datadr, these are represented as lists of key-value pair lists.  As an example, consider the iris data set, which consists of measurements of 4 aspects for 50 flowers from each of 3 species of iris.  Suppose we would like to split the data into key-value pairs by species.  We can do this by passing key-value pairs to a function `r rdl("kvPairs()")`:
 
 ```{r by_species_kv}
 # create by-species key-value pairs
 irisKV <- kvPairs(
-   list("setosa", subset(iris, Species == "setosa")),
-   list("versicolor", subset(iris, Species == "versicolor")),
-   list("virginica", subset(iris, Species == "virginica"))
+  kvPair("setosa", subset(iris, Species == "setosa")),
+  kvPair("versicolor", subset(iris, Species == "versicolor")),
+  kvPair("virginica", subset(iris, Species == "virginica"))
 )
 irisKV
 ```
 
 The result is a list of 3 key-value pairs.  We chose the species to be the key and the corresponding data frame to be the value for each pair.
 
-`kvPairs()` is basically a wrapper for `list()`.  It checks to make sure key-value pairs are valid and makes sure they are printed nicely.  In pratice we actually very rarely need specify key-value pairs like this, but this is useful for illustration.
+`r rdl("kvPairs()")` is basically a wrapper for `list()`.  It checks to make sure key-value pairs are valid and makes sure they are printed nicely.  In pratice we actually very rarely need specify key-value pairs like this, but this is useful for illustration.
 
 This example shows how we can partition our data into key-value pairs that have meaning -- each subset represents measurements for one species.  The ability to divide the data up into pieces allows us to distribute datasets that might be too large for a single disk across multiple machines, and also allows us to distribute computation, because in D&R we apply methods independently to each subset.
 
-Here, we manually created the partition by species, but `datadr` provides simple mechanisms for specifying divisions, which we will cover [later in the tutorial](#division).  Prior to doing that, however, we need to discuss how collections of key-value pairs are represented in `datadr` as distributed data objects.
+Here, we manually created the partition by species, but datadr provides simple mechanisms for specifying divisions, which we will cover [later in the tutorial](#division).  Prior to doing that, however, we need to discuss how collections of key-value pairs are represented in datadr as distributed data objects.
 
-### Distributed Data Objects ###
+## Distributed Data Objects
 
-In `datadr`, a collection of key-value pairs along with attributes about the collection constitute a distributed data object (ddo).  Most `datadr` operations require a ddo, and hence it is important to represent key-value pair collections as such.
+In datadr, a collection of key-value pairs along with attributes about the collection constitute a distributed data object (ddo).  Most datadr operations require a ddo, and hence it is important to represent key-value pair collections as such.
 
 We will continue to use our collection of key-value pairs we created previously `irisKV`:
 
 ```{r by_species_kv2}
 irisKV <- kvPairs(
-   list("setosa", subset(iris, Species == "setosa")),
-   list("versicolor", subset(iris, Species == "versicolor")),
-   list("virginica", subset(iris, Species == "virginica"))
+  kvPair("setosa", subset(iris, Species == "setosa")),
+  kvPair("versicolor", subset(iris, Species == "versicolor")),
+  kvPair("virginica", subset(iris, Species == "virginica"))
 )
 ```
 
-#### Initializing a ddo
+### Initializing a ddo
 
-To initialize a collection of key-value pairs as a distributed data object, we use the `ddo()` function:
+To initialize a collection of key-value pairs as a distributed data object, we use the `r rdl("ddo()")` function:
 
 ```{r create_ddo, message=FALSE}
 # create ddo object from irisKV
 irisDdo <- ddo(irisKV)
 ```
 
-`ddo()` simply takes the collection of key-value pairs and attaches additional attributes to the resulting ddo object.  Note that in this example, since the data is in memory, we are supplying the data directly as the argument to `ddo()`.  For larger datasets stored in more scalable backends, instead of passing the data directly, a connection that points to where the key-value pairs are stored is provided.  This is discussed in more detail in the [Store/Compute Backends](#backend-choices) sections.
+`r rdl("ddo()")` simply takes the collection of key-value pairs and attaches additional attributes to the resulting ddo object.  Note that in this example, since the data is in memory, we are supplying the data directly as the argument to `r rdl("ddo()")`.  For larger datasets stored in more scalable backends, instead of passing the data directly, a connection that points to where the key-value pairs are stored is provided.  This is discussed in more detail in the [Store/Compute Backends](#backend-choices) sections.
 
 Objects of class "ddo" have several methods that can be invoked on them.  The most simple of these is a print method:
 
@@ -70,7 +79,7 @@ irisDdo
 
 The print method shows several attributes that have been computed for the data.
 
-#### ddo attributes
+### ddo attributes
 
 From the printout of `irisDdo`, we see that a ddo has several attributes.  The most basic ones:
 
@@ -94,11 +103,11 @@ kvExample(irisDdo)
 
 `kvExample` is useful for obtaining a subset key-value pair against which we can test out different analytical methods before applying them across the entire data set.
 
-Another attribute, `splitSizeDistn` is empty.  This attribute provides information about the quantiles of the distribution of the size of each division.  With very large data sets with a large number of subsets, this can be useful for getting a feel for how uniform the subset sizes are.  
+Another attribute, `splitSizeDistn` is empty.  This attribute provides information about the quantiles of the distribution of the size of each division.  With very large data sets with a large number of subsets, this can be useful for getting a feel for how uniform the subset sizes are.
 
-The `splitSizeDistn` attribute and more that we will see in the future are not computed by default when `ddo()` is called.  This is because it requires a computation over the data set, which can take some time with very large datasets, and may not always be desired or necessary.
+The `splitSizeDistn` attribute and more that we will see in the future are not computed by default when `r rdl("ddo()")` is called.  This is because it requires a computation over the data set, which can take some time with very large datasets, and may not always be desired or necessary.
 
-#### Updating attributes
+### Updating attributes
 
 If you decide at any point that you would like to update the attributes of your ddo, you can call:
 
@@ -113,8 +122,8 @@ The `splitSizeDistn` attribute is now available.  We can look at it with the acc
 ```{r plot_iris_split_size, fig.height=3, echo=2:3}
 par(mar = c(4.1, 4.1, 1, 0.2))
 # plot distribution of the size of the key-value pairs
-qplot(y = splitSizeDistn(irisDdo), 
-   xlab = "percentile", ylab = "subset size (kb)")
+qplot(y = splitSizeDistn(irisDdo),
+  xlab = "percentile", ylab = "subset size (kb)")
 ```
 
 Another way to get updated attributes is at the time the ddo is created, by setting `update = TRUE`:
@@ -124,13 +133,13 @@ Another way to get updated attributes is at the time the ddo is created, by sett
 irisDdo <- ddo(irisKV, update = TRUE)
 ```
 
-#### Note about storage and computation
+### Note about storage and computation
 
-Notice the first line of output from the `irisDdo` object printout.  It states that the object is backed by a "kvMemory" (key-value pairs in memory) connection. 
+Notice the first line of output from the `irisDdo` object printout.  It states that the object is backed by a "kvMemory" (key-value pairs in memory) connection.
 
 We will talk about other backends for storing and processing larger data sets that don't fit in memory or even on your workstation's disk.  The key here is that the interface always stays the same, regardless of whether we are working with terabytes of kilobytes of data.
 
-#### Accessing subsets
+### Accessing subsets
 
 We can access subsets of the data by key or by index:
 
@@ -146,11 +155,11 @@ irisDdo[1:2]
 
 Accessing by key is much simpler when the key is a character string, but subsetting works even when passing a list of non-string keys, or even a `digest()` of the desired key object (if you don't know what that means, don't worry!).
 
-### Distributed Data Frames ###
+## Distributed Data Frames
 
 Key-value pairs in distributed data objects can have any structure.  If we constrain the values to be data frames or readily transformable into data frames, we can represent the object as a distributed data frame (ddf).  A ddf is a ddo with additional attributes.  Having a uniform data frame structure for the values provides several benefits and data frames are required for specifying division methods.
 
-#### Initializing a ddf
+### Initializing a ddf
 
 Our `irisKV` data we created earlier has values that are data frames, so we can cast it as a distributed data frame like this:
 
@@ -160,25 +169,27 @@ irisDdf <- ddf(irisKV, update = TRUE)
 irisDdf
 ```
 
-#### ddf attributes
+### ddf attributes
 
 The printout of `irisDdf` above shows the ddo attributes we saw previously (because every ddf is also a ddo), but we also see some new data-frame-related attributes (which were automatically updated because we specified `update = TRUE`).  These include:
 
 - `names`: a list of the variables
 - `nrow`: the total number of rows in the data set
 
-Also there are additional "other" attributes listed at the bottom.  The `summary` attribute can be useful for getting an initial look at the variables in your ddf, and is sometimes required for later computations, such as quantile estimation with `drQuantile()`, where the range of a variable is required to get a good quantile approximation.  Summary statistics are all computed simultaneously in one MapReduce job with a call to `updateAttributes()`.
+Also there are additional "other" attributes listed at the bottom.  The `summary` attribute can be useful for getting an initial look at the variables in your ddf, and is sometimes required for later computations, such as quantile estimation with `r rdl("drQuantile()")`, where the range of a variable is required to get a good quantile approximation.  Summary statistics are all computed simultaneously in one MapReduce job with a call to `r rdl("updateAttributes()")`.
 
-The numerical summary statistics are computed using a [numerically stable algorithm](http://janinebennett.org/index_files/ParallelStatisticsAlgorithms.pdf).  
+The numerical summary statistics are computed using a [numerically stable algorithm](http://janinebennett.org/index_files/ParallelStatisticsAlgorithms.pdf).
 
 Summary statistics include:
 
-For each numeric variable: 
+For each numeric variable:
+
 - `nna`: number of missing values
 - `stats`: list of mean, variance, skewness, kurtosis
 - `range`: min, max
 
 For each categorical variable:
+
 - `nobs`: number of observations
 - `nna`: number of missing values
 - `freqTable`: a data frame containing a frequency table
@@ -202,7 +213,7 @@ or:
 summary(irisDdf)$Species$freqTable
 ```
 
-#### Data frame-like "ddf" methods
+### Data frame-like "ddf" methods
 
 Note that with an object of class "ddf", you can use some of the methods that apply to regular data frames:
 
@@ -226,11 +237,11 @@ ncol(irisDdf)
 names(irisDdf)
 ```
 
-However, `datadr` does not go too far beyond this in terms of making a ddf feel or behave exactly like a regular R data frame.
+However, datadr does not go too far beyond this in terms of making a ddf feel or behave exactly like a regular R data frame.
 
-#### Passing a data frame to `ddo()` and `ddf()`
+### Passing a data frame to `ddo()` and `ddf()`
 
-It is worth noting that it is possible to pass a single data frame to `ddo()` or `ddf()`.  The result is a single key-value pair with the data frame as the value, and `""` as the key.  This is an option strictly for convenience and with the idea that further down the line operations will be applied that split the data up into a more useful set of key-value pairs.  Here is an example:
+It is worth noting that it is possible to pass a single data frame to `r rdl("ddo()")` or `r rdl("ddf()")`.  The result is a single key-value pair with the data frame as the value, and `""` as the key.  This is an option strictly for convenience and with the idea that further down the line operations will be applied that split the data up into a more useful set of key-value pairs.  Here is an example:
 
 ```{r iris_df_ddf, message=FALSE}
 # initialize ddf from a data frame
@@ -239,9 +250,10 @@ irisDf <- ddf(iris, update = TRUE)
 
 This of course only makes sense for data small enough to fit in memory in the first place.  In the [backends](#small-memory--cpu) section, we will discuss other backends for larger data and how data can be added to objects or read in from a raw source in these cases.
 
-### ddo/ddf Transformations ###
+## ddo/ddf Transformations
 
 A very common thing to want to do to a ddo or ddf is apply a transformation to each of the subsets.  For example we may want to apply a transformation that :
+
 - adds a new derived variable to a subset of a ddf
 - applies a statistical method or summarization to each subset
 - coerces each subset into a data frame
@@ -249,14 +261,14 @@ A very common thing to want to do to a ddo or ddf is apply a transformation to e
 
 This will be a routine thing to do when we start talking about D&R operations.
 
-We can add transformations to a ddo/ddf using `addTransform()`.  Let's look at an example.  Recall the iris data split by species:
+We can add transformations to a ddo/ddf using `r rdl("addTransform()")`.  Let's look at an example.  Recall the iris data split by species:
 
 ```{r addtransform_data, eval=TRUE, echo=TRUE}
 # iris ddf by Species
 irisKV <- kvPairs(
-   list("setosa", subset(iris, Species == "setosa")),
-   list("versicolor", subset(iris, Species == "versicolor")),
-   list("virginica", subset(iris, Species == "virginica"))
+  kvPair("setosa", subset(iris, Species == "setosa")),
+  kvPair("versicolor", subset(iris, Species == "versicolor")),
+  kvPair("virginica", subset(iris, Species == "virginica"))
 )
 irisDdf <- ddf(irisKV)
 ```
@@ -267,7 +279,11 @@ Suppose we want to add a simple transformation that computes the mean sepal widt
 irisSL <- addTransform(irisDdf, function(x) mean(x$Sepal.Width))
 ```
 
-I simply provide my input ddo/ddf `irisDdf` and specify the function I want to apply to each subset.  If the function I provide has two arguments, it will pass both the key and value of the current subset as arguments to the function.  If it has one argument, it will pass just the value.  In this case, it has one argument, so I can expect `x` inside my function to hold the data frame value for a subset of `irisDdf`.  Note that I can pre-define this function:
+I simply provide my input ddo/ddf `irisDdf` and specify the function I want to apply to each subset.
+
+If the function I provide has two arguments, it will pass both the key and value of the current subset as arguments to the function.  If it has one argument, it will pass just the value.  In this case, it has one argument, so I can expect `x` inside my function to hold the data frame value for a subset of `irisDdf`.  Note that I can pre-define this function:
+
+The output of a transformation function specified in `r rdl("addTransform()")` will always be treated as a value unless the function returns a key-value pair via `r rdl("kvPair()")`.
 
 ```{r addtransform_ex1, eval=TRUE, echo=TRUE, message=FALSE}
 meanSL <- function(x) mean(x$Sepal.Width)
@@ -288,9 +304,9 @@ irisSL[[1]]
 
 We see that `irisSL` now holds the data that we would expect -- the result of our transformation -- the mean sepal length.  This value is not a data frame, so `irisSL` is a ddo.
 
-But notice in the printout of `irisSL` above that it says that the object size is still the same as our input data, `irisDdf`.  This is because when you add a transformation to a ddo/ddf, the transformation is not applied immediately, but is deferred until a data operation is applied.  Data operations include `divide()`, `recombine()`, `drJoin()`, `drLapply()`, `drFilter()`, `drSample{}`, and `drSubset()`.  When any of these are invoked on an object with a transformation attached to it, the transformation will be applied prior to any other computation.  The transformation will also be applied any time a subset of the data is requested.  Thus although the data has not been physically transformed after a call of `addTransform()`, we can think of it conceptually as already being transformed.
+But notice in the printout of `irisSL` above that it says that the object size is still the same as our input data, `irisDdf`.  This is because when you add a transformation to a ddo/ddf, the transformation is not applied immediately, but is deferred until a data operation is applied.  Data operations include `r rdl("divide()")`, `r rdl("recombine()")`, `r rdl("drJoin()")`, `r rdl("drLapply()")`, `r rdl("drFilter()")`, `r rdl("drSample()")`, and `r rdl("drSubset()")`.  When any of these are invoked on an object with a transformation attached to it, the transformation will be applied prior to any other computation.  The transformation will also be applied any time a subset of the data is requested.  Thus although the data has not been physically transformed after a call of `r rdl("addTransform()")`, we can think of it conceptually as already being transformed.
 
-When `addTransform` is called, it is tested on a subset of the data to make sure we have all of the necessary global variables and packages loaded necessary to portably perform the transformation.  If there are any package dependencies, it makes a note and stores this information with the object.  Also if there are any global object dependencies, these are also stored with the object.  So whatever objects exist at the time of applying the transformation, any subsequent changes to the object or removal of the object will not effect the transformation.
+When `r rdl("addTransform()")` is called, it is tested on a subset of the data to make sure we have all of the necessary global variables and packages loaded necessary to portably perform the transformation.  If there are any package dependencies, it makes a note and stores this information with the object.  Also if there are any global object dependencies, these are also stored with the object.  So whatever objects exist at the time of applying the transformation, any subsequent changes to the object or removal of the object will not effect the transformation.
 
 For example, consider the following:
 
@@ -311,17 +327,26 @@ irisSLplus7[[1]]
 
 We still get a result even though the global dependency of `meanSLplus7()` has been removed.
 
-A final note about `addTransform()`: it is possible to add multiple transformations to a distributed data object, in which case they are applied in the order supplied, but only one transform should ever be necessary.
+A final note about `r rdl("addTransform()")`: it is possible to add multiple transformations to a distributed data object, in which case they are applied in the order supplied, but only one transform should ever be necessary.
 
-### Common Data Operations ###
+For example, suppose we want to further modify `irisSL` to append some text to the keys:
+
+```{r addtransform_ex5, eval=TRUE, echo=TRUE}
+irisSL2 <- addTransform(irisSL, function(k, v) kvPair(paste0(k, "_mod"), v))
+irisSL2[[1]]
+```
+
+This is also an example of using a transformation function to modify the key.
+
+## Common Data Operations
 
 The majority of this documentation will cover division and recombination, but here, we present some methods that are available for common data operations that come in handy for manipulating data in various ways.
 
-#### drLapply
+### drLapply
 
-It is convenient to be able use the familiar `lapply()` approach to apply a function to each key-value pair.  An `lapply()` method, called `drLapply()` is available for ddo/ddf objects.  The function you specify follows the same convention as described earlier (if it has one argument, it is applied to the value only, if it has two arguments, it is applied to the key and value).  A ddo is returned.
+It is convenient to be able use the familiar `lapply()` approach to apply a function to each key-value pair.  An `lapply()` method, called `r rdl("drLapply()")` is available for ddo/ddf objects.  The function you specify follows the same convention as described earlier (if it has one argument, it is applied to the value only, if it has two arguments, it is applied to the key and value).  A ddo is returned.
 
-Here is an example of using `drLapply()` to the `irisDdf` data:
+Here is an example of using `r rdl("drLapply()")` to the `irisDdf` data:
 
 ```{r lapply, message=FALSE}
 # get the mean Sepal.Width for each key-value pair in irisDdf
@@ -330,9 +355,9 @@ means <- drLapply(irisDdf, function(x) mean(x$Sepal.Width))
 as.list(means)
 ```
 
-#### drFilter
+### drFilter
 
-A `drFilter()` function is available which takes a function that is applied to each key-value pair.  If the function returns `TRUE`, that key-value pair will be included in the resulting ddo/ddf, if `FALSE`, it will not.
+A `r rdl("drFilter()")` function is available which takes a function that is applied to each key-value pair.  If the function returns `TRUE`, that key-value pair will be included in the resulting ddo/ddf, if `FALSE`, it will not.
 
 Here is an example that keeps all subsets with mean sepal width less than 3:
 
@@ -341,9 +366,9 @@ Here is an example that keeps all subsets with mean sepal width less than 3:
 drFilter(irisDdf, function(v) mean(v$Sepal.Width) < 3)
 ```
 
-#### drJoin
+### drJoin
 
-The `drJoin()` operation takes multiple input ddo/ddf objects and merges their values by key.  This is a very useful function when there are multiple input sources that you would like to group together.
+The `r rdl("drJoin()")` operation takes multiple input ddo/ddf objects and merges their values by key.  This is a very useful function when there are multiple input sources that you would like to group together.
 
 Suppose with the iris data that we have two separate input sources, one that reports the sepal width and another that reports the sepal length for each species:
 
@@ -359,9 +384,9 @@ An example subset of `sw` looks like this:
 sw[[1]]
 ```
 
-Both `sw` and `sl` have the same set of keys, and the value is a vector of either the sepal width or length.  To join them together, we can call `drJoin()`.  This function takes any number of ddo/ddf inputs, and they must be named.  It also optionally takes a `postTransFn` argument, which allows a transformation function to be applied the joined result.
+Both `sw` and `sl` have the same set of keys, and the value is a vector of either the sepal width or length.  To join them together, we can call `r rdl("drJoin()")`.  This function takes any number of ddo/ddf inputs, and they must be named.  It also optionally takes a `postTransFn` argument, which allows a transformation function to be applied the joined result.
 
-By default, `drJoin()` groups the various data sources by key, and the resulting value is a named list, where each element of the list is the value from each data source.  For example, to join the `sw` and `sl` data, we get the following:
+By default, `r rdl("drJoin()")` groups the various data sources by key, and the resulting value is a named list, where each element of the list is the value from each data source.  For example, to join the `sw` and `sl` data, we get the following:
 
 ```{r join3, message=FALSE}
 # join sw and sl by key
@@ -372,9 +397,9 @@ joinRes[[1]]
 
 The resulting object, `joinRes`, has subsets with the same keys, but the values are now named lists that consist of the values from both data sets.
 
-#### drSample
+### drSample
 
-It can be useful to create a new data set of randomly sampled subsets of a large data set.  The `drSample()` function provides for this.  Currently, it is as simple as specifying the fraction of subsets you would like the resulting data set to have:
+It can be useful to create a new data set of randomly sampled subsets of a large data set.  The `r rdl("drSample()")` function provides for this.  Currently, it is as simple as specifying the fraction of subsets you would like the resulting data set to have:
 
 ```{r sample, message=FALSE}
 set.seed(1234)

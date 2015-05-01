@@ -1,33 +1,32 @@
-## if you haven't installed buildDocs or staticdocs:
-# library(devtools)
-# install_github("hafen/buildDocs")
-# install_github("hadley/staticdocs")
-
-library(buildDocs)
-library(staticdocs)
+## load packages (and install if not on system)
+if(!require("staticdocs"))
+  devtools::install_github("hadley/staticdocs")
+if(!require("packagedocs"))
+  devtools::install_github("hafen/packagedocs")
+if(!require("rmarkdown"))
+  install.packages("rmarkdown")
+if(!require("datadr"))
+  devtools::install_github("tesseradata/datadr")
 
 # make sure your working directory is set to repo base directory
+code_path <- "~/Documents/Code/Tessera/hafen/datadr"
 
-brand <- "<a class='navbar-brand' href='http://tessera.io'>
-  <img src='figures/icon.png' alt='tessera icon' width='30px' height='30px' style='margin-top: -6px;'>
-  Tessera
-</a>"
-pill1 <- packageNavPill("https://github.com/tesseradata/datadr", docsActive = FALSE)
-pill2 <- packageNavPill("https://github.com/tesseradata/datadr", docsActive = TRUE)
+# set some options
+pdof <- package_docs(lib_dir = "assets", toc_collapse = TRUE)
+knitr::opts_knit$set(root.dir = normalizePath("."))
 
-buildFunctionRef(
-   packageLoc = "~/Documents/Code/Tessera/hafen/datadr",
-   outLoc = ".",
-   optTemplates = list(navpills = pill1, brand = brand),
-   copyrightText = "Tessera"
-)
+# generate code/*.R files
+purl_docs()
 
-buildDocs(
-   docsLoc = "docs",
-   outLoc = ".",
-   pageList = c("1intro.Rmd", "2data.Rmd", "3dnr.Rmd", "4mr.Rmd", "5divag.Rmd", "6backend.Rmd", "7faq.Rmd"),
-   optTemplates = list(navpills = pill2, brand = brand),
-   copyrightText = "Tessera",
-   root.dir = "."
-)
+# generate index.html
+unlink("assets", recursive = TRUE)
+render("index.Rmd", output_format = pdof)
+check_output("index.html")
+system("open index.html")
+
+# generate rd.html
+render_rd("rd_skeleton.Rmd", "datadr", code_path,
+  rd_index = "rd_index.yaml",output_format = pdof)
+check_output("rd.html")
+system("open rd.html")
 
