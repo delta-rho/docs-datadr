@@ -329,7 +329,7 @@ For a simple example, we turn to the famous iris data.  Suppose we want to compu
 library(plyr)
 
 ddply(iris, .(Species), function(x)
-  data.frame(msl = mean(x$Sepal.Length)))
+  data.frame(val = mean(x$Sepal.Length)))
 ```
 
 With `plyr`, we are performing the split, apply, and combine all in the same step.
@@ -339,9 +339,9 @@ With `plyr`, we are performing the split, apply, and combine all in the same ste
 ```r
 library(dplyr)
 
-bySpecies <- group_by(iris, Species)
-summarise(bySpecies,
-  msl = mean(Sepal.Length))
+iris %>%
+  group_by(Species) %>%
+  summarise(val = mean(Sepal.Length))
 ```
 
 Here, we call `group_by()` to create a `bySpecies` object, which is the same object as `iris` but with additional information about the indices of where the rows for each species are.  Then we call `summarise()` which computes the mean sepal length for each group and returns the result as a data frame.
@@ -351,10 +351,9 @@ Here, we call `group_by()` to create a `bySpecies` object, which is the same obj
 ```r
 library(datadr)
 
-bySpecies <- divide(iris, by = "Species")
-msl <- addTransform(bySpecies, function(x)
-  data.frame(msl = mean(x$Sepal.Length)))
-recombine(msl, combRbind)
+divide(iris, by = "Species") %>%
+  addTransform(function(x) mean(x$Sepal.Length)) %>%
+  recombine(combRbind)
 ```
 
 Here, we call `r rdl("divide()")` to partition the iris data by species, resulting in a "distributed data frame", called `bySpecies`.  Note that this result is a new data object - an important and deliberate distinction.  Then we call `r rdl("addTransform()")` to apply a function that computes the mean sepal length to each partition.  Then we call `r rdl("recombine()")` to bind all the results into a single data frame.

@@ -51,15 +51,6 @@
     - drHexbin
     - drQuantile
 -
-  section_name: Data Operations
-  description:
-  topics:
-    - drFilter
-    - drJoin
-    - drLapply
-    - drSample
-    - drSubset
--
   section_name: Division
   description:
   topics:
@@ -86,6 +77,15 @@
     - combMean
     - combMeanCoef
     - combRbind
+-
+  section_name: Data Operations
+  description:
+  topics:
+    - drFilter
+    - drJoin
+    - drLapply
+    - drSample
+    - drSubset
 -
   section_name: MapReduce
   description:

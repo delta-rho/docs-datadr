@@ -16,6 +16,3 @@ brand: |-
   <img src='figures/icon.png' alt='tessera icon' width='30px' height='30px' style='margin-top: -3px;'>
   </a>
 ---
-
-
-

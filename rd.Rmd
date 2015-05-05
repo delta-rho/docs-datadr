@@ -16,9 +16,6 @@ brand: |-
   <img src='figures/icon.png' alt='tessera icon' width='30px' height='30px' style='margin-top: -3px;'>
   </a>
 ---
-
-
-
 <h1>Divide and Recombine for Large, Complex Data</h1>
 
 <p><strong>Author:</strong> Ryan Hafen</p>
@@ -1231,249 +1228,6 @@ plot(probs, quantile(iris$Sepal.Length, probs = probs, type = 1))</code></pre>
 Ryan Hafen
 
 
-# Data Operations
-
-
-
-## drFilter
-
-<h3>Filter a 'ddo' or 'ddf' Object</h3>
-
-Filter a 'ddo' or 'ddf' object
-
-<h4>Usage</h4>
-<pre class="r"><code>drFilter(x, filterFn, output = NULL, overwrite = FALSE, params = NULL,
-  packages = NULL, control = NULL)</code></pre>
-
-<h4>Arguments</h4>
-<dl class="rd-dl">
-  <dt>x</dt>
-  <dd class="rd-dd">an object of class ddo or ddf</dd>
-  <dt>filterFn</dt>
-  <dd class="rd-dd">function that takes a key or key-value pair and returns either <code>TRUE</code> or <code>FALSE</code> - if <code>TRUE</code>, that key-value pair will be present in the result. See examples for details.</dd>
-  <dt>output</dt>
-  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
-  <dt>overwrite</dt>
-  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
-  <dt>params</dt>
-  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
-  <dt>packages</dt>
-  <dd class="rd-dd">a vector of R package names that contain functions used in <code>filterFn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
-  <dt>control</dt>
-  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
-</dl>
-
-  <h4>Value</h4>
-
-  <p class="rd-p"><dl>
-a ddo or ddf object
-</dl></p>
-
-
-
-<h4>Examples</h4>
-<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
-drFilter(bySpecies, function(v) mean(v$Sepal.Width) < 3)
-drFilter(bySpecies, function(k,v) k != "Species=virginica" & mean(v$Sepal.Width) < 3)</code></pre>
-
-<h4>See also</h4>
-
-<code><a href=#drjoin>drJoin</a></code>, <code><a href=#drlapply>drLapply</a></code>
-
-
-<h4>Author</h4>
-
-Ryan Hafen
-
-
-
-
-## drJoin
-
-<h3>Join Two Data Sources by Key</h3>
-
-Join two data sources by key
-
-<h4>Usage</h4>
-<pre class="r"><code>drJoin(..., output = NULL, overwrite = FALSE, postTransFn = NULL,
-  params = NULL, packages = NULL, control = NULL)</code></pre>
-
-<h4>Arguments</h4>
-<dl class="rd-dl">
-  <dt>output</dt>
-  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
-  <dt>overwrite</dt>
-  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
-  <dt>postTransFn</dt>
-  <dd class="rd-dd">an optional function to be applied to the each final key-value pair after joining</dd>
-  <dt>params</dt>
-  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
-  <dt>packages</dt>
-  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
-  <dt>control</dt>
-  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
-  <dt>...</dt>
-  <dd class="rd-dd">named lists of input objects - assumed that all are of same type (all HDFS, all localDisk, all in-memory)</dd>
-</dl>
-
-  <h4>Value</h4>
-
-  <p class="rd-p"><dl>
-a ddo object stored in the <code>output</code> connection, where the values are named lists with names according to the names given to the input data objects, and values are the corresponding data
-</dl></p>
-
-
-
-<h4>Examples</h4>
-<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
-# get independent lists of just SW and SL
-sw <- drLapply(bySpecies, function(x) x$Sepal.Width)
-sl <- drLapply(bySpecies, function(x) x$Sepal.Length)
-drJoin(Sepal.Width = sw, Sepal.Length = sl, postTransFn = as.data.frame)</code></pre>
-
-<h4>See also</h4>
-
-<code><a href=#drfilter>drFilter</a></code>, <code><a href=#drlapply>drLapply</a></code>
-
-
-<h4>Author</h4>
-
-Ryan Hafen
-
-
-
-
-## drLapply
-
-<h3>Apply a function to all key-value pairs of a ddo/ddf object</h3>
-
-Apply a function to all key-value pairs of a ddo/ddf object and get a new ddo object back, unless a different <code>combine</code> strategy is specified.
-
-<h4>Usage</h4>
-<pre class="r"><code>drLapply(X, FUN, combine = combDdo(), output = NULL, overwrite = FALSE,
-  params = NULL, packages = NULL, control = NULL, verbose = TRUE)</code></pre>
-
-<h4>Arguments</h4>
-<dl class="rd-dl">
-  <dt>X</dt>
-  <dd class="rd-dd">an object of class "ddo" of "ddf"</dd>
-  <dt>FUN</dt>
-  <dd class="rd-dd">a function to be applied to each subset</dd>
-  <dt>combine</dt>
-  <dd class="rd-dd">optional method to combine the results</dd>
-  <dt>output</dt>
-  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
-  <dt>overwrite</dt>
-  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
-  <dt>params</dt>
-  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
-  <dt>packages</dt>
-  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
-  <dt>control</dt>
-  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
-  <dt>verbose</dt>
-  <dd class="rd-dd">logical - print messages about what is being done</dd>
-</dl>
-
-  <h4>Value</h4>
-
-  <p class="rd-p"><dl>
-depends on <code>combine</code>
-</dl></p>
-
-
-
-<h4>Examples</h4>
-<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
-drLapply(bySpecies, function(x) x$Sepal.Width)</code></pre>
-
-<h4>See also</h4>
-
-<code><a href=#recombine>recombine</a></code>, <code><a href=#drfilter>drFilter</a></code>, <code><a href=#drjoin>drJoin</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combrbind>combRbind</a></code>
-
-
-<h4>Author</h4>
-
-Ryan Hafen
-
-
-
-
-## drSample
-
-<h3>Take a Sample of Key-Value Pairs
-Take a sample of key-value Pairs</h3>
-
-
-<h4>Usage</h4>
-<pre class="r"><code>drSample(x, fraction, output = NULL, overwrite = FALSE, control = NULL)</code></pre>
-
-<h4>Arguments</h4>
-<dl class="rd-dl">
-  <dt>x</dt>
-  <dd class="rd-dd">a ddo or ddf object</dd>
-  <dt>fraction</dt>
-  <dd class="rd-dd">fraction of key-value pairs to keep (between 0 and 1)</dd>
-  <dt>output</dt>
-  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
-  <dt>overwrite</dt>
-  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
-  <dt>control</dt>
-  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
-</dl>
-
-
-<h4>Examples</h4>
-<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
-set.seed(234)
-sampleRes <- drSample(bySpecies, fraction = 0.25)</code></pre>
-
-
-
-## drSubset
-
-<h3>Subsetting Distributed Data Frames</h3>
-
-Return a subset of a "ddf" object to memory
-
-<h4>Arguments</h4>
-<dl class="rd-dl">
-  <dt>data</dt>
-  <dd class="rd-dd">object to be subsetted -- an object of class "ddf" or "ddo" - in the latter case, need to specify <code>preTransFn</code> to coerce each subset into a data frame</dd>
-  <dt>subset</dt>
-  <dd class="rd-dd">logical expression indicating elements or rows to keep: missing values are taken as false</dd>
-  <dt>select</dt>
-  <dd class="rd-dd">expression, indicating columns to select from a data frame</dd>
-  <dt>drop</dt>
-  <dd class="rd-dd">passed on to [ indexing operator</dd>
-  <dt>preTransFn</dt>
-  <dd class="rd-dd">a transformation function (if desired) to applied to each subset prior to division - note: this is deprecated - instead use <code><a href=#addtransform>addTransform</a></code> prior to calling divide</dd>
-  <dt>maxRows</dt>
-  <dd class="rd-dd">the maximum number of rows to return</dd>
-  <dt>params</dt>
-  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
-  <dt>packages</dt>
-  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
-  <dt>control</dt>
-  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
-  <dt>verbose</dt>
-  <dd class="rd-dd">logical - print messages about what is being done</dd>
-</dl>
-
-  <h4>Value</h4>
-
-  <p class="rd-p"><dl>
-data frame
-</dl></p>
-
-
-
-
-<h4>Author</h4>
-
-Ryan Hafen
-
-
 # Division
 
 
@@ -2063,6 +1817,249 @@ Ryan Hafen
 <h4>See also</h4>
 
 <code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combmean>combMean</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+# Data Operations
+
+
+
+## drFilter
+
+<h3>Filter a 'ddo' or 'ddf' Object</h3>
+
+Filter a 'ddo' or 'ddf' object
+
+<h4>Usage</h4>
+<pre class="r"><code>drFilter(x, filterFn, output = NULL, overwrite = FALSE, params = NULL,
+  packages = NULL, control = NULL)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">an object of class ddo or ddf</dd>
+  <dt>filterFn</dt>
+  <dd class="rd-dd">function that takes a key or key-value pair and returns either <code>TRUE</code> or <code>FALSE</code> - if <code>TRUE</code>, that key-value pair will be present in the result. See examples for details.</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>filterFn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a ddo or ddf object
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
+drFilter(bySpecies, function(v) mean(v$Sepal.Width) < 3)
+drFilter(bySpecies, function(k,v) k != "Species=virginica" & mean(v$Sepal.Width) < 3)</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#drjoin>drJoin</a></code>, <code><a href=#drlapply>drLapply</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drJoin
+
+<h3>Join Two Data Sources by Key</h3>
+
+Join two data sources by key
+
+<h4>Usage</h4>
+<pre class="r"><code>drJoin(..., output = NULL, overwrite = FALSE, postTransFn = NULL,
+  params = NULL, packages = NULL, control = NULL)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>postTransFn</dt>
+  <dd class="rd-dd">an optional function to be applied to the each final key-value pair after joining</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>...</dt>
+  <dd class="rd-dd">named lists of input objects - assumed that all are of same type (all HDFS, all localDisk, all in-memory)</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+a ddo object stored in the <code>output</code> connection, where the values are named lists with names according to the names given to the input data objects, and values are the corresponding data
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
+# get independent lists of just SW and SL
+sw <- drLapply(bySpecies, function(x) x$Sepal.Width)
+sl <- drLapply(bySpecies, function(x) x$Sepal.Length)
+drJoin(Sepal.Width = sw, Sepal.Length = sl, postTransFn = as.data.frame)</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#drfilter>drFilter</a></code>, <code><a href=#drlapply>drLapply</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drLapply
+
+<h3>Apply a function to all key-value pairs of a ddo/ddf object</h3>
+
+Apply a function to all key-value pairs of a ddo/ddf object and get a new ddo object back, unless a different <code>combine</code> strategy is specified.
+
+<h4>Usage</h4>
+<pre class="r"><code>drLapply(X, FUN, combine = combDdo(), output = NULL, overwrite = FALSE,
+  params = NULL, packages = NULL, control = NULL, verbose = TRUE)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>X</dt>
+  <dd class="rd-dd">an object of class "ddo" of "ddf"</dd>
+  <dt>FUN</dt>
+  <dd class="rd-dd">a function to be applied to each subset</dd>
+  <dt>combine</dt>
+  <dd class="rd-dd">optional method to combine the results</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+depends on <code>combine</code>
+</dl></p>
+
+
+
+<h4>Examples</h4>
+<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
+drLapply(bySpecies, function(x) x$Sepal.Width)</code></pre>
+
+<h4>See also</h4>
+
+<code><a href=#recombine>recombine</a></code>, <code><a href=#drfilter>drFilter</a></code>, <code><a href=#drjoin>drJoin</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combrbind>combRbind</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
+
+
+
+
+## drSample
+
+<h3>Take a Sample of Key-Value Pairs
+Take a sample of key-value Pairs</h3>
+
+
+<h4>Usage</h4>
+<pre class="r"><code>drSample(x, fraction, output = NULL, overwrite = FALSE, control = NULL)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>x</dt>
+  <dd class="rd-dd">a ddo or ddf object</dd>
+  <dt>fraction</dt>
+  <dd class="rd-dd">fraction of key-value pairs to keep (between 0 and 1)</dd>
+  <dt>output</dt>
+  <dd class="rd-dd">a "kvConnection" object indicating where the output data should reside (see <code><a href=#localdiskconn>localDiskConn</a></code>, <code><a href=#hdfsconn>hdfsConn</a></code>).  If <code>NULL</code> (default), output will be an in-memory "ddo" object.</dd>
+  <dt>overwrite</dt>
+  <dd class="rd-dd">logical; should existing output location be overwritten? (also can specify <code>overwrite = "backup"</code> to move the existing output to _bak)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+</dl>
+
+
+<h4>Examples</h4>
+<pre class="r"><code>bySpecies <- divide(iris, by = "Species")
+set.seed(234)
+sampleRes <- drSample(bySpecies, fraction = 0.25)</code></pre>
+
+
+
+## drSubset
+
+<h3>Subsetting Distributed Data Frames</h3>
+
+Return a subset of a "ddf" object to memory
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>data</dt>
+  <dd class="rd-dd">object to be subsetted -- an object of class "ddf" or "ddo" - in the latter case, need to specify <code>preTransFn</code> to coerce each subset into a data frame</dd>
+  <dt>subset</dt>
+  <dd class="rd-dd">logical expression indicating elements or rows to keep: missing values are taken as false</dd>
+  <dt>select</dt>
+  <dd class="rd-dd">expression, indicating columns to select from a data frame</dd>
+  <dt>drop</dt>
+  <dd class="rd-dd">passed on to [ indexing operator</dd>
+  <dt>preTransFn</dt>
+  <dd class="rd-dd">a transformation function (if desired) to applied to each subset prior to division - note: this is deprecated - instead use <code><a href=#addtransform>addTransform</a></code> prior to calling divide</dd>
+  <dt>maxRows</dt>
+  <dd class="rd-dd">the maximum number of rows to return</dd>
+  <dt>params</dt>
+  <dd class="rd-dd">a named list of parameters external to the input data that are needed in the distributed computing (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>packages</dt>
+  <dd class="rd-dd">a vector of R package names that contain functions used in <code>fn</code> (most should be taken care of automatically such that this is rarely necessary to specify)</dd>
+  <dt>control</dt>
+  <dd class="rd-dd">parameters specifying how the backend should handle things (most-likely parameters to <code>rhwatch</code> in RHIPE) - see <code><a href=#rhipecontrol>rhipeControl</a></code> and <code><a href=#localdiskcontrol>localDiskControl</a></code></dd>
+  <dt>verbose</dt>
+  <dd class="rd-dd">logical - print messages about what is being done</dd>
+</dl>
+
+  <h4>Value</h4>
+
+  <p class="rd-p"><dl>
+data frame
+</dl></p>
+
+
 
 
 <h4>Author</h4>

@@ -30,3 +30,6 @@ render_rd("rd_skeleton.Rmd", "datadr", code_path,
 check_output("rd.html")
 system("open rd.html")
 
+# # get topics
+# db <- tools::Rd_db("datadr")
+# gsub("\\.Rd", "", names(db))
