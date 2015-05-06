@@ -18,9 +18,8 @@ brand: |-
 ---
 <h1>Divide and Recombine for Large, Complex Data</h1>
 
-<p><strong>Author:</strong> Ryan Hafen</p>
+<p><strong>Authors:</strong> <a href="mailto:rhafen@gmail.com">Ryan Hafen</a> [aut, cre]</p>
 <p><strong>Version:</strong> 0.7.5.7</p>
-<p><strong>Date:</strong> 2015-05-01</p>
 <p><strong>License:</strong> BSD_3_clause + file LICENSE</p>
 
 <h4>Description</h4>
@@ -32,8 +31,17 @@ Integrated Programming Environment (RHIPE).  Also includes experimental
 support for key-value pairs stored as Spark RDDs using the SparkR package.</p>
 
 <h4>Depends</h4>
+<p>(none)</p>
+
+<h4>Imports</h4>
 <p>
-R (>= 2.15.1)</p>
+data.table,
+digest,
+codetools,
+hexbin,
+parallel,
+magrittr,
+dplyr</p>
 
 <h4>Suggests</h4>
 <p>
@@ -41,6 +49,9 @@ testthat (>= 0.8.1),
 roxygen2 (>= 4.0.0),
 Rhipe,
 SparkR</p>
+
+<h4>Enhances</h4>
+<p>(none)</p>
 
 # Key-Value Pairs
 
