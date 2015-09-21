@@ -1479,7 +1479,7 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
 
 * Other attributes: getKeys(), splitSizeDistn(), splitRowDistn(), summary()
 * Conditioning variables: edGroup</code></pre>
-<p>poo</p>
+
 <p>We can look at the distribution of number of people in each education group with the following simple recombination:</p>
 <p>We need to add a transformation to <code>byEdGroup</code> that simply compute the number of rows, and then use a <code><a target='_blank' href='rd.html#combrbind'>combRbind</a></code> recombine to collect all of the results in a single data frame:</p>
 <pre class="r"><code># add transformation to count number of people in each education group
