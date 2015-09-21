@@ -335,8 +335,6 @@ byEdGroup <- divide(adultDdfGroup, by = "edGroup",
 byEdGroup
 ```
 
-poo
-
 We can look at the distribution of number of people in each education group with the following simple recombination:
 
 We need to add a transformation to `byEdGroup` that simply compute the number of rows, and then use a `r rdl("combRbind")` recombine to collect all of the results in a single data frame:
