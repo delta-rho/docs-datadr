@@ -2,7 +2,7 @@
 
 ## Background
 
-This tutorial covers an implementation of Divide and Recombine (D&R) in the R statistical programming environment, an R package called datadr.  This is one component of the [Tessera](http://tessera.io) environment for the analysis of large complex data.
+This tutorial covers an implementation of Divide and Recombine (D&R) in the R statistical programming environment, via an R package called `datadr`.  This is one component of the [Tessera](http://tessera.io) environment for the analysis of large complex data.
 
 The goal of D&R is to provide an environment for data analysts to carry out deep statistical analysis of large, complex data with as much ease and flexibility as is possible with small datasets.
 
@@ -30,27 +30,30 @@ Related projects:
 
 ## Package Overview
 
-We'll first lay out some of the major data types and functions in datadr to provide a feel for what is available in the package.
+We'll first lay out some of the major data types and functions in `datadr` to provide a feel for what is available in the package.
 
 ### Data types
 
-The two major data types in datadr are distributed data frames and distributed data objects.  A *distributed data frame (ddf)* can be thought of as a data frame that is split into chunks -- each chunk is a subset of rows of the data frame -- which may reside across nodes of a cluster (hence "distributed").  A *distributed data object (ddo)* is a similar notion except that each subset can be an object with arbitrary structure.  Every distributed data frame is also a distributed data object.
+The two major data types in `datadr` are distributed data frames and distributed data objects.  A *distributed data frame (ddf)* can be thought of as a data frame that is split into chunks -- each chunk is a subset of rows of the data frame -- which may reside across nodes of a cluster (hence "distributed").  A *distributed data object (ddo)* is a similar notion except that each subset can be an object with arbitrary structure.  Every distributed data frame is also a distributed data object.
 
-The data structure that we store ddo/ddf objects in are *key-value pairs*.
+The data structure we use to store ddo/ddf objects are *key-value pairs*.  For our purposes, the key is typically a label that uniqueley identifies a subset, and the value is the subset corresponding to the key.  Thus, a ddo/ddf is essentially a list, where each element of the list contains a key-value pair.
 
 ### Functions
 
-Functions in datadr can be categorized into providing mechanisms for distributed data types and backends connections, data operations, division-independent operations, and date ingest operations.
+Functions in `datadr` can be categorized according to the mechanisms they provide for distributed data types and backend connections, data operations, division-independent operations, and date ingest operations.
 
 #### Distributed data types / backend connections
 
-- `r rdl("localDiskConn()")`, `r rdl("hdfsConn()")`: connections to ddo / ddf objects persisted to a backend storage system
+Currently, there are three ways to store data using `datadr`:  in memory, on a standard file system (e.g. a hard drive), and on the Hadoop Distributed File System (HDFS).  Distributed data objects stored in memory do not require a connection to a backend.  However, datasets that exceed the memory capabilities must be stored to disk or to HDFS via a backend connection:
+
+- `r rdl("localDiskConn()")`: instantiate backend connections to ddo / ddf objects that are persisted (i.e. 'permanently' stored) to a local disk connection
+- `r rdl("hdfsConn()")`: instantiate backend connections to ddo / ddf objects that are persisted to HDFS 
 - `r rdl("ddf()")`: instantiate a ddo from a backend connection
 - `r rdl("ddo()")`: instantiate a ddf from a backend connection
 
 #### Data operations
 
-- `r rdl("divide()")`: divide a ddf by conditioning variables or randomly
+- `r rdl("divide()")`: divide a ddf, either by conditioning variables or by randomly chosen subsets
 - `r rdl("recombine()")`: take the results of a computation applied to a ddo/ddf and combine them in a number of ways
 - `r rdl("drLapply()")`: apply a function to each subset of a ddo/ddf and obtain a new ddo/ddf
 - `r rdl("drJoin()")`: join multiple ddo/ddf objects by key
@@ -59,7 +62,7 @@ Functions in datadr can be categorized into providing mechanisms for distributed
 - `r rdl("drSubset()")`: return a subset data frame of a ddf
 - `r rdl("mrExec()")`: run a traditional MapReduce job on a ddo/ddf
 
-All of these operations kick off MapReduce jobs to perform the desired computation.  In datadr, we almost always want a new data set result right away, so there is not a prevailing notion of *deferred evaluation* as in other distributed computing frameworks.  The only exception is a function that can be applied prior to or after any of these data operations that adds a transformation to be applied to each subset at the time of the next data operation.  This function is `r rdl("addTransform()")` and will be discussed in greater detail later in the tutorial
+All of these operations kick off MapReduce jobs to perform the desired computation.  In `datadr`, we almost always want a new data set result right away, so there is not a prevailing notion of *deferred evaluation* as in other distributed computing frameworks.  The only exception is a function that can be applied prior to or after any of these data operations that adds a transformation to be applied to each subset at the time of the next data operation.  This function is `r rdl("addTransform()")` and will be discussed in greater detail later in the tutorial
 
 #### Division-independent operations
 
@@ -67,19 +70,19 @@ All of these operations kick off MapReduce jobs to perform the desired computati
 - `r rdl("drAggregate()")`: all-data tabulation, similar to R's `r rdl("aggregate()")` command
 - `r rdl("drHexbin()")`: all-data hexagonal binning aggregation
 
-Note that every data operation works in a backend-agnostic manner, meaning that whether you have data in memory, on your hard drive, or on the Hadoop Distributed File System (HDFS), you can run the same commands virtually unchanged.
+Note that every data operation works in a backend-agnostic manner, meaning that whether you have data in memory, on your hard drive, or HDFS, you can run the same commands virtually unchanged.
 
 #### Data ingest
 
-One of the most difficult aspects of dealing with very large data is getting the data into R.  We have extended the `read.table` family of functions in R to datadr.  They are available as `r rdl("drRead.csv()")`, `r rdl("drRead.delim()")`, etc.  See `r rdl("drRead.table")` for more available methods.  These are particularly useful for backends like local disk and HDFS.  Usage of these methods is discussed in the [Reading in Data](#reading-in-data) section.
+One of the most difficult aspects of dealing with very large data is getting the data into R.  In `datadr`, we have extended the `read.table` family of functions.  They are available as `r rdl("drRead.csv()")`, `r rdl("drRead.delim()")`, etc.  See `r rdl("drRead.table")` for additional methods.  These are particularly useful for backends like local disk and HDFS.  Usage of these methods is discussed in the [Reading in Data](#reading-in-data) section.
 
 ## Quickstart
 
-Before going into some of the details of datadr, let's first run through some quick examples to get acquainted with some of the functionality of the package.
+Before going into some of the details of `datadr`, let's first run through some quick examples to get acquainted with some of the functionality of the package.
 
 ### Package installation
 
-First, we need to install the necessary components, datadr and `trelliscope`.  These are R packages that we install from github.
+First, we need to install the necessary components, `datadr` and `trelliscope`.  These are R packages that we install from github.
 
 ```{r quickstart_install, eval=FALSE, echo=TRUE}
 install.packages("devtools") # if not already installed
@@ -89,7 +92,7 @@ devtools::install_github("tesseradata/trelliscope")
 
 The example we go through will be a small dataset that we can handle in a local R session, and therefore we only need to have these two packages installed.  For other installation options when dealing with larger data sets, see the [quickstart](http://tessera.io/#quickstart) on our website.
 
-We will use as an example a data set consisting of the median list and sold price of homes in the United States, aggregated by county and month from 2008 to early 2014.  This data is available in a package called `housingData`.  To install this package:
+We will use as an example a data set consisting of the median list and sold price of homes in the United States, aggregated by county and month from 2008 to early 2014.  These data are available in a package called `housingData`.  To install this package:
 
 ```{r quickstart_install2, eval=FALSE, echo=TRUE}
 devtools::install_github("hafen/housingData")
@@ -125,7 +128,7 @@ byCounty <- divide(housing,
   by = c("county", "state"), update = TRUE)
 ```
 
-Our `byCounty` object is now a distributed data frame (ddf).  We can see some of its attributes by printing the object:
+Our `byCounty` object is now a distributed data frame (ddf) that is stored in memory.  We can see some of its attributes by printing the object:
 
 ```{r quickstart_divide_print, eval=TRUE, echo=TRUE}
 byCounty
@@ -137,9 +140,9 @@ We see there are 2883 counties, and we can access various attributes by calling 
 summary(byCounty)
 ```
 
-Since datadr knows that `byCounty` is a ddf, and we set `update = TRUE`, after the division operation it computed global summary statistics for each of the variables.
+Since `datadr` knows that `byCounty` is a ddf, and because we set `update = TRUE`, after the division operation global summary statistics were computed for each of the variables.
 
-Suppose we want a more meaningful global summary, such as computing quantiles.  datadr can do this in a division-independent way with `r rdl("drQuantile()")`.  For example, let's look at quantiles for the median list price:
+Suppose we want a more meaningful global summary, such as computing quantiles.  `datadr` can do this in a division-independent way with `r rdl("drQuantile()")`.  For example, let's look at quantiles for the median list price and plot them using `r rdl("xyplot()")` from the `lattice` package:
 
 ```{r quickstart_quantile, eval=TRUE, echo=TRUE}
 priceQ <- drQuantile(byCounty, var = "medListPriceSqft")
@@ -159,8 +162,9 @@ Now, suppose we wish to apply an analytic method to each subset of our data and 
 We can create a function that operates on an input data frame `x` that does this:
 
 ```{r quickstart_lm, eval=TRUE, echo=TRUE}
-lmCoef <- function(x)
+lmCoef <- function(x) {
   coef(lm(medListPriceSqft ~ time, data = x))[2]
+}
 ```
 
 We can apply this transformation to each subset in our data with `r rdl("addTransform()")`:
@@ -177,7 +181,7 @@ When we look at a subset of `byCountySlope`, we see what the result will look li
 byCountySlope[[1]]
 ```
 
-Now let's recombine the slopes into a single data frame.  This can be done with the `r rdl("recombine()")` function, using the `r rdl("combRbind")` combiner:
+Now let's recombine the slopes into a single data frame.  This can be done with the `r rdl("recombine()")` function, using the `r rdl("combRbind")` combiner, which is analagous to `r rdl("rbind()")`:
 
 ```{r quickstart_recombine_compute, eval=TRUE, echo=FALSE, results="hide", message=FALSE, purl=FALSE}
 # countySlopes <- recombine(byCountySlope, combRbind)
@@ -217,13 +221,13 @@ geo <- divide(geoCounty, by = c("county", "state"))
 geo[[1]]
 ```
 
-We see that this division gives us a divided data set with the same keys as `byCounty`.  So we can join this with `byCounty`:
+We see that this division gives us a divided data set with the same keys as `byCounty`.  So we can join it with `byCounty`:
 
 ```{r quickstart_join, eval=TRUE, echo=TRUE}
 byCountyGeo <- drJoin(housing = byCounty, geo = geo)
 ```
 
-What this does is provide us with a new ddo (not a data frame anymore) where for each key, the value is a list with a data frame `housing` holding the time series data and a data frame `geo` holding the geographic data.  We can see the structure of this for a subset with:
+What this does is provide us with a new ddo (not a distributed data frame anymore) where for each key, the value is a list with a data frame `housing` holding the time series data and a data frame `geo` holding the geographic data.  We can see the structure of this for a subset with:
 
 ```{r guickstart_join_str, eval=TRUE, echo=TRUE}
 str(byCountyGeo[[1]])
@@ -237,7 +241,7 @@ In short, a Trelliscope display is like a Trellis display, or ggplot with faceti
 
 ### Setting up a visualization database
 
-For a Trelliscope display, we must connect to a "visualization database" (VDB), which is a directory on our computer where we are going to organize all of the information about our displays (we create many over the course of an analysis).  Typically we will set up a single VDB for each project we are working on.  We can do this with the `vdbConn()` function:
+For a Trelliscope display, we must connect to a "visualization database" (VDB), which is a directory on our computer where we are going to organize all of the information about our displays (we create many over the course of an analysis).  Typically, we will set up a single VDB for each project we are working on.  We can do this with the `vdbConn()` function:
 
 ```{r quickstart_vdb, eval=FALSE, echo=TRUE, message=FALSE}
 vdbConn("vdb", name = "tesseraTutorial")
@@ -252,9 +256,10 @@ To create a Trelliscope display, we need to first specify a *panel* function, wh
 For example, here is a panel function that takes a value and creates a lattice `xyplot` of list and sold price over time:
 
 ```{r quickstart_panel, eval=TRUE, echo=TRUE}
-timePanel <- function(x)
+timePanel <- function(x) {
   xyplot(medListPriceSqft + medSoldPriceSqft ~ time,
     data = x, auto.key = TRUE, ylab = "Price / Sq. Ft.")
+}
 ```
 
 Let's test it on a subset:
@@ -267,7 +272,7 @@ Great!
 
 ### Creating a cognostics function
 
-Another optional thing we can do is specify a *cognostics* function for each subset.  A cognostic is a metric that tells us an interesting attribute about a subset of data, and we can use cognostics to have more worthwhile interactions with all of the panels in the display.  A cognostic function needs to return a list of metrics:
+Another optional thing we can do is specify a *cognostics* function that is applied to each subset.  A cognostic is a metric that tells us an interesting attribute about a subset of data, and we can use cognostics to have more worthwhile interactions with all of the panels in the display.  A cognostic function needs to return a list of metrics:
 
 ```{r quickstart_cog, eval=TRUE, echo=TRUE}
 priceCog <- function(x) { list(
@@ -279,7 +284,7 @@ priceCog <- function(x) { list(
 )}
 ```
 
-We use the `cog()` function to wrap our metrics so that we can provide a description for the cognostic, and we also employ special cognostics functions `cogMean()` and `cogRange()` to compute mean and range with a default description.
+We use the `cog()` function to wrap our metrics so that we can provide a description for the cognostic. We may also employ special cognostics functions like `cogMean()` and `cogRange()` to compute mean and range with a default description.
 
 We should test the cognostics function on a subset:
 
@@ -309,15 +314,15 @@ view()
 
 If you have not been following along but are wondering what that `view()` command did, you can visit <a href="http://hafen.shinyapps.io/tesseraTutorial/" target="_blank">here</a> for an online version.  You will find a list of displays to choose from, of which the one with the name `list_sold_vs_time_datadr_tut` is the one we just created.  This brings up the point that you can share your Trelliscope displays online -- more about that as well as how to use the viewer will be covered in the Trelliscope tutorial -- but feel free to play around with the viewer.
 
-This covers the basics of datadr and a bit of `trelliscope`.  Hopefully you now feel comfortable enough to dive in and try some things out.  The remainder of this tutorial and the [Trelliscope](http://tessera.io/docs-trelliscope/) tutorial will provide greater detail.
+This covers the basics of `datadr` and a bit of `trelliscope`.  Hopefully you now feel comfortable enough to dive in and try some things out.  The remainder of this tutorial and the [Trelliscope](http://tessera.io/docs-trelliscope/) tutorial will provide greater detail.
 
 ## For plyr / dplyr Users
 
-Now that we have seen some examples and have a good feel for what datadr can do, if you have used `plyr` or `dplyr` packages, you may be noticing a few similarities.
+Now that we have seen some examples and have a good feel for what `datadr` can do, if you have used `plyr` or `dplyr` packages, you may be noticing a few similarities.
 
-If you have not used these packages before, you can skip this section, but if you have, we will go over a quick simple example of how to do the same thing in the three packages to help the `*plyr` user have a better understanding of how to map their knowledge of those packages to datadr.
+If you have not used these packages before, you can skip this section, but if you have, we will go over a quick simple example of how to do the same thing in the three packages to help the `plyr` user have a better understanding of how to map their knowledge of those packages to `datadr`.
 
-It is also worth discussing some of the similarites and differences to help understand when datadr is useful.  We expand on this in the [FAQ](#faq).  In a nutshell, datadr and `dplyr` are very different and are actually complementary.  We often use the amazing features of `dplyr` for within-subset computations, but we need datadr to deal with complex data structures and potentially very large data.
+It is also worth discussing some of the similarites and differences to help understand when `datadr` is useful.  We expand on this in the [FAQ](#faq).  In a nutshell, `datadr` and `dplyr` are very different and are actually complementary.  We often use the amazing features of `dplyr` for within-subset computations, but we need `datadr` to deal with complex data structures and potentially very large data.
 
 ### Code Comparison
 
@@ -346,7 +351,7 @@ iris %>%
 
 Here, we call `group_by()` to create a `bySpecies` object, which is the same object as `iris` but with additional information about the indices of where the rows for each species are.  Then we call `summarise()` which computes the mean sepal length for each group and returns the result as a data frame.
 
-#### With datadr:
+#### With `datadr`:
 
 ```r
 library(datadr)
@@ -364,7 +369,7 @@ Here, we call `r rdl("divide()")` to partition the iris data by species, resulti
 The outline for the remainder of this tutorial is as follows:
 
 - First, we cover the foundational D&R data structure, key-value pairs, and how they are used to build distributed data objects and distributed data frames.
-- Next, we provide an introduction to the high-level division and recombination methods in datadr.
+- Next, we provide an introduction to the high-level division and recombination methods in `datadr`.
 - Then we discuss MapReduce - the lower-level language for accomplishing D&R tasks - which is the engine for the higher-level D&R methods.  It is anticipated that the high-level language will be sufficient for most analysis tasks, but the lower-level approach is also exposed for special cases.
 - We then cover some division-independent methods that do various computations across the entire data set, regardless of how it is divided, such as all-data quantiles.
 - For all of these discussions, we use small data sets that fit in memory for illustrative purposes.  This way everyone can follow along without having a large-scale backend like Hadoop running and configured.  However, the true power of D&R is with large data sets, and after introducing all of this material, we cover different backends for computation and storage that are currently supported for D&R.  The interface always remains the same regardless of the backend, but there are various things to discuss for each case.  The backends discussed are:
