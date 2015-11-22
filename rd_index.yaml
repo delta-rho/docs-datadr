@@ -75,9 +75,10 @@
     - drGLM
     - combCollect
     - combDdo
+    - combDdf
+    - combRbind
     - combMean
     - combMeanCoef
-    - combRbind
 -
   section_name: Data Operations
   description:
