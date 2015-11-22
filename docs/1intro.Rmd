@@ -162,9 +162,8 @@ Now, suppose we wish to apply an analytic method to each subset of our data and 
 We can create a function that operates on an input data frame `x` that does this:
 
 ```{r quickstart_lm, eval=TRUE, echo=TRUE}
-lmCoef <- function(x) {
+lmCoef <- function(x) 
   coef(lm(medListPriceSqft ~ time, data = x))[2]
-}
 ```
 
 We can apply this transformation to each subset in our data with `r rdl("addTransform()")`:
@@ -256,10 +255,9 @@ To create a Trelliscope display, we need to first specify a *panel* function, wh
 For example, here is a panel function that takes a value and creates a lattice `xyplot` of list and sold price over time:
 
 ```{r quickstart_panel, eval=TRUE, echo=TRUE}
-timePanel <- function(x) {
+timePanel <- function(x)
   xyplot(medListPriceSqft + medSoldPriceSqft ~ time,
     data = x, auto.key = TRUE, ylab = "Price / Sq. Ft.")
-}
 ```
 
 Let's test it on a subset:
@@ -379,3 +377,4 @@ The outline for the remainder of this tutorial is as follows:
 - We also provide R source files for all of the examples throughout the documentation.
 
 <div class="alert alert-warning"><strong>Note:</strong> Throughout the tutorial, the examples cover very small, simple datasets.  This is by design, as the focus is on getting familiar with the available commands.  Keep in mind that the same interface works for very large datasets, and that design choices have been made with scalability in mind.</div>
+
