@@ -31,7 +31,7 @@ xyplot(q ~ fval, data = priceQ, scales = list(y = list(log = 10)))
 byCounty[[1]]
 
 ## 
-lmCoef <- function(x)
+lmCoef <- function(x) 
   coef(lm(medListPriceSqft ~ time, data = x))[2]
 
 ## 

@@ -128,7 +128,8 @@ blockquote {
   opacity: 0.7;
 }
 
-.ff-a-fix:focus {
-  outline: none;
-  background-color: none;
+.table {
+  width: 75% !important;
+  margin: 0 auto 25 auto !important;
 }
+

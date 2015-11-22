@@ -83,6 +83,9 @@ meanRes <- mrExec(irisRR,
 meanRes[c("virginica", "versicolor")]
 
 ## 
+sapply(c("trelliscope", "ggplot2", "scales", "reshape2"), unloadNamespace)
+
+## 
 # example of a setup expression
 setup <- expression({
   suppressMessages(library(plyr))

@@ -45,7 +45,7 @@
                 <span class="navbar-brand">
 <a href="http://tessera.io"> <img src='figures/icon.png' alt='tessera icon' width='30px' height='30px' style='margin-top: -3px;'> </a>
         </span>
-                <a href="#content-top" class="navbar-brand page-scroll">
+                <a href="index.html" class="navbar-brand page-scroll">
         datadr - Divide and Recombine in R
         </a>
       </div>
@@ -126,7 +126,7 @@
 <h1>Introduction</h1>
 <div id="background" class="section level2">
 <h2>Background</h2>
-<p>This tutorial covers an implementation of Divide and Recombine (D&amp;R) in the R statistical programming environment, an R package called datadr. This is one component of the <a href="http://tessera.io">Tessera</a> environment for the analysis of large complex data.</p>
+<p>This tutorial covers an implementation of Divide and Recombine (D&amp;R) in the R statistical programming environment, via an R package called <code>datadr</code>. This is one component of the <a href="http://tessera.io">Tessera</a> environment for the analysis of large complex data.</p>
 <p>The goal of D&amp;R is to provide an environment for data analysts to carry out deep statistical analysis of large, complex data with as much ease and flexibility as is possible with small datasets.</p>
 <p>D&amp;R is accomplished by dividing data into meaningful subsets, applying analytical methods to those subsets, and recombining the results. Recombinations can be numerical or visual. For visualization in the D&amp;R framework, see <a href="http://github.com/tesseradata/trelliscope">Trelliscope</a>.</p>
 <p>The diagram below is a visual representation of the D&amp;R process.</p>
@@ -148,19 +148,21 @@
 </div>
 <div id="package-overview" class="section level2">
 <h2>Package Overview</h2>
-<p>We’ll first lay out some of the major data types and functions in datadr to provide a feel for what is available in the package.</p>
+<p>We’ll first lay out some of the major data types and functions in <code>datadr</code> to provide a feel for what is available in the package.</p>
 <div id="data-types" class="section level3">
 <h3>Data types</h3>
-<p>The two major data types in datadr are distributed data frames and distributed data objects. A <em>distributed data frame (ddf)</em> can be thought of as a data frame that is split into chunks – each chunk is a subset of rows of the data frame – which may reside across nodes of a cluster (hence “distributed”). A <em>distributed data object (ddo)</em> is a similar notion except that each subset can be an object with arbitrary structure. Every distributed data frame is also a distributed data object.</p>
-<p>The data structure that we store ddo/ddf objects in are <em>key-value pairs</em>.</p>
+<p>The two major data types in <code>datadr</code> are distributed data frames and distributed data objects. A <em>distributed data frame (ddf)</em> can be thought of as a data frame that is split into chunks – each chunk is a subset of rows of the data frame – which may reside across nodes of a cluster (hence “distributed”). A <em>distributed data object (ddo)</em> is a similar notion except that each subset can be an object with arbitrary structure. Every distributed data frame is also a distributed data object.</p>
+<p>The data structure we use to store ddo/ddf objects are <em>key-value pairs</em>. For our purposes, the key is typically a label that uniqueley identifies a subset, and the value is the subset corresponding to the key. Thus, a ddo/ddf is essentially a list, where each element of the list contains a key-value pair.</p>
 </div>
 <div id="functions" class="section level3">
 <h3>Functions</h3>
-<p>Functions in datadr can be categorized into providing mechanisms for distributed data types and backends connections, data operations, division-independent operations, and date ingest operations.</p>
+<p>Functions in <code>datadr</code> can be categorized according to the mechanisms they provide for distributed data types and backend connections, data operations, division-independent operations, and date ingest operations.</p>
 <div id="distributed-data-types-backend-connections" class="section level4">
 <h4>Distributed data types / backend connections</h4>
+<p>Currently, there are three ways to store data using <code>datadr</code>: in memory, on a standard file system (e.g. a hard drive), and on the Hadoop Distributed File System (HDFS). Distributed data objects stored in memory do not require a connection to a backend. However, datasets that exceed the memory capabilities must be stored to disk or to HDFS via a backend connection:</p>
 <ul>
-<li><code><a target='_blank' href='rd.html#localdiskconn'>localDiskConn()</a></code>, <code><a target='_blank' href='rd.html#hdfsconn'>hdfsConn()</a></code>: connections to ddo / ddf objects persisted to a backend storage system</li>
+<li><code><a target='_blank' href='rd.html#localdiskconn'>localDiskConn()</a></code>: instantiate backend connections to ddo / ddf objects that are persisted (i.e. ‘permanently’ stored) to a local disk connection</li>
+<li><code><a target='_blank' href='rd.html#hdfsconn'>hdfsConn()</a></code>: instantiate backend connections to ddo / ddf objects that are persisted to HDFS</li>
 <li><code><a target='_blank' href='rd.html#ddf'>ddf()</a></code>: instantiate a ddo from a backend connection</li>
 <li><code><a target='_blank' href='rd.html#ddo'>ddo()</a></code>: instantiate a ddf from a backend connection</li>
 </ul>
@@ -168,7 +170,7 @@
 <div id="data-operations" class="section level4">
 <h4>Data operations</h4>
 <ul>
-<li><code><a target='_blank' href='rd.html#divide'>divide()</a></code>: divide a ddf by conditioning variables or randomly</li>
+<li><code><a target='_blank' href='rd.html#divide'>divide()</a></code>: divide a ddf, either by conditioning variables or by randomly chosen subsets</li>
 <li><code><a target='_blank' href='rd.html#recombine'>recombine()</a></code>: take the results of a computation applied to a ddo/ddf and combine them in a number of ways</li>
 <li><code><a target='_blank' href='rd.html#drlapply'>drLapply()</a></code>: apply a function to each subset of a ddo/ddf and obtain a new ddo/ddf</li>
 <li><code><a target='_blank' href='rd.html#drjoin'>drJoin()</a></code>: join multiple ddo/ddf objects by key</li>
@@ -177,7 +179,7 @@
 <li><code><a target='_blank' href='rd.html#drsubset'>drSubset()</a></code>: return a subset data frame of a ddf</li>
 <li><code><a target='_blank' href='rd.html#mrexec'>mrExec()</a></code>: run a traditional MapReduce job on a ddo/ddf</li>
 </ul>
-<p>All of these operations kick off MapReduce jobs to perform the desired computation. In datadr, we almost always want a new data set result right away, so there is not a prevailing notion of <em>deferred evaluation</em> as in other distributed computing frameworks. The only exception is a function that can be applied prior to or after any of these data operations that adds a transformation to be applied to each subset at the time of the next data operation. This function is <code><a target='_blank' href='rd.html#addtransform'>addTransform()</a></code> and will be discussed in greater detail later in the tutorial</p>
+<p>All of these operations kick off MapReduce jobs to perform the desired computation. In <code>datadr</code>, we almost always want a new data set result right away, so there is not a prevailing notion of <em>deferred evaluation</em> as in other distributed computing frameworks. The only exception is a function that can be applied prior to or after any of these data operations that adds a transformation to be applied to each subset at the time of the next data operation. This function is <code><a target='_blank' href='rd.html#addtransform'>addTransform()</a></code> and will be discussed in greater detail later in the tutorial</p>
 </div>
 <div id="division-independent-operations" class="section level4">
 <h4>Division-independent operations</h4>
@@ -186,25 +188,25 @@
 <li><code><a target='_blank' href='rd.html#draggregate'>drAggregate()</a></code>: all-data tabulation, similar to R’s <code><a target='_blank' href='rd.html#aggregate'>aggregate()</a></code> command</li>
 <li><code><a target='_blank' href='rd.html#drhexbin'>drHexbin()</a></code>: all-data hexagonal binning aggregation</li>
 </ul>
-<p>Note that every data operation works in a backend-agnostic manner, meaning that whether you have data in memory, on your hard drive, or on the Hadoop Distributed File System (HDFS), you can run the same commands virtually unchanged.</p>
+<p>Note that every data operation works in a backend-agnostic manner, meaning that whether you have data in memory, on your hard drive, or HDFS, you can run the same commands virtually unchanged.</p>
 </div>
 <div id="data-ingest" class="section level4">
 <h4>Data ingest</h4>
-<p>One of the most difficult aspects of dealing with very large data is getting the data into R. We have extended the <code>read.table</code> family of functions in R to datadr. They are available as <code><a target='_blank' href='rd.html#drread_csv'>drRead.csv()</a></code>, <code><a target='_blank' href='rd.html#drread_delim'>drRead.delim()</a></code>, etc. See <code><a target='_blank' href='rd.html#drread_table'>drRead.table</a></code> for more available methods. These are particularly useful for backends like local disk and HDFS. Usage of these methods is discussed in the <a href="#reading-in-data">Reading in Data</a> section.</p>
+<p>One of the most difficult aspects of dealing with very large data is getting the data into R. In <code>datadr</code>, we have extended the <code>read.table</code> family of functions. They are available as <code><a target='_blank' href='rd.html#drread_csv'>drRead.csv()</a></code>, <code><a target='_blank' href='rd.html#drread_delim'>drRead.delim()</a></code>, etc. See <code><a target='_blank' href='rd.html#drread_table'>drRead.table</a></code> for additional methods. These are particularly useful for backends like local disk and HDFS. Usage of these methods is discussed in the <a href="#reading-in-data">Reading in Data</a> section.</p>
 </div>
 </div>
 </div>
 <div id="quickstart" class="section level2">
 <h2>Quickstart</h2>
-<p>Before going into some of the details of datadr, let’s first run through some quick examples to get acquainted with some of the functionality of the package.</p>
+<p>Before going into some of the details of <code>datadr</code>, let’s first run through some quick examples to get acquainted with some of the functionality of the package.</p>
 <div id="package-installation" class="section level3">
 <h3>Package installation</h3>
-<p>First, we need to install the necessary components, datadr and <code>trelliscope</code>. These are R packages that we install from github.</p>
+<p>First, we need to install the necessary components, <code>datadr</code> and <code>trelliscope</code>. These are R packages that we install from github.</p>
 <pre class="r"><code>install.packages(&quot;devtools&quot;) # if not already installed
 devtools::install_github(&quot;tesseradata/datadr&quot;)
 devtools::install_github(&quot;tesseradata/trelliscope&quot;)</code></pre>
 <p>The example we go through will be a small dataset that we can handle in a local R session, and therefore we only need to have these two packages installed. For other installation options when dealing with larger data sets, see the <a href="http://tessera.io/#quickstart">quickstart</a> on our website.</p>
-<p>We will use as an example a data set consisting of the median list and sold price of homes in the United States, aggregated by county and month from 2008 to early 2014. This data is available in a package called <code>housingData</code>. To install this package:</p>
+<p>We will use as an example a data set consisting of the median list and sold price of homes in the United States, aggregated by county and month from 2008 to early 2014. These data are available in a package called <code>housingData</code>. To install this package:</p>
 <pre class="r"><code>devtools::install_github(&quot;hafen/housingData&quot;)</code></pre>
 </div>
 <div id="environment-setup" class="section level3">
@@ -236,7 +238,7 @@ head(housing)</code></pre>
 <p>One way we want to divide the data is by county name and state to be able to study how home prices have evolved over time within county. We can do this with a call to <code><a target='_blank' href='rd.html#divide'>divide()</a></code>:</p>
 <pre class="r"><code>byCounty &lt;- divide(housing,
   by = c(&quot;county&quot;, &quot;state&quot;), update = TRUE)</code></pre>
-<p>Our <code>byCounty</code> object is now a distributed data frame (ddf). We can see some of its attributes by printing the object:</p>
+<p>Our <code>byCounty</code> object is now a distributed data frame (ddf) that is stored in memory. We can see some of its attributes by printing the object:</p>
 <pre class="r"><code>byCounty</code></pre>
 <pre><code>
 Distributed data frame backed by &#39;kvMemory&#39; connection
@@ -273,8 +275,8 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
  skewness :  6.816523  skewness : 5.610013 
  kurtosis :  94.06555  kurtosis : 60.48337 
  --------------------  ------------------- </code></pre>
-<p>Since datadr knows that <code>byCounty</code> is a ddf, and we set <code>update = TRUE</code>, after the division operation it computed global summary statistics for each of the variables.</p>
-<p>Suppose we want a more meaningful global summary, such as computing quantiles. datadr can do this in a division-independent way with <code><a target='_blank' href='rd.html#drquantile'>drQuantile()</a></code>. For example, let’s look at quantiles for the median list price:</p>
+<p>Since <code>datadr</code> knows that <code>byCounty</code> is a ddf, and because we set <code>update = TRUE</code>, after the division operation global summary statistics were computed for each of the variables.</p>
+<p>Suppose we want a more meaningful global summary, such as computing quantiles. <code>datadr</code> can do this in a division-independent way with <code><a target='_blank' href='rd.html#drquantile'>drQuantile()</a></code>. For example, let’s look at quantiles for the median list price and plot them using <code><a target='_blank' href='rd.html#xyplot'>xyplot()</a></code> from the <code>lattice</code> package:</p>
 <pre class="r"><code>priceQ &lt;- drQuantile(byCounty, var = &quot;medListPriceSqft&quot;)
 xyplot(q ~ fval, data = priceQ, scales = list(y = list(log = 10)))</code></pre>
 <p><img src="index_files/figure-html/quickstart_quantile-1.png" title="" alt="" width="624" /></p>
@@ -296,7 +298,7 @@ $value
 <h3>Applying an analytic method and recombination</h3>
 <p>Now, suppose we wish to apply an analytic method to each subset of our data and recombine the result. A simple thing we may want to look at is the slope coefficient of a linear model applied to list prices vs. time for each county.</p>
 <p>We can create a function that operates on an input data frame <code>x</code> that does this:</p>
-<pre class="r"><code>lmCoef &lt;- function(x)
+<pre class="r"><code>lmCoef &lt;- function(x) 
   coef(lm(medListPriceSqft ~ time, data = x))[2]</code></pre>
 <p>We can apply this transformation to each subset in our data with <code><a target='_blank' href='rd.html#addtransform'>addTransform()</a></code>:</p>
 <pre class="r"><code>byCountySlope &lt;- addTransform(byCounty, lmCoef)</code></pre>
@@ -309,7 +311,7 @@ $value
 $value
          time 
 -0.0002323686 </code></pre>
-<p>Now let’s recombine the slopes into a single data frame. This can be done with the <code><a target='_blank' href='rd.html#recombine'>recombine()</a></code> function, using the <code><a target='_blank' href='rd.html#combrbind'>combRbind</a></code> combiner:</p>
+<p>Now let’s recombine the slopes into a single data frame. This can be done with the <code><a target='_blank' href='rd.html#recombine'>recombine()</a></code> function, using the <code><a target='_blank' href='rd.html#combrbind'>combRbind</a></code> combiner, which is analagous to <code><a target='_blank' href='rd.html#rbind'>rbind()</a></code>:</p>
 <pre class="r"><code>countySlopes &lt;- recombine(byCountySlope, combRbind)</code></pre>
 <pre class="r"><code>head(countySlopes)</code></pre>
 <pre><code>                county state           val
@@ -340,9 +342,9 @@ time5     Adair County    KY  0.0034399585</code></pre>
 $value
    fips       lon      lat      rMapState rMapCounty
 1 45001 -82.45851 34.23021 south carolina  abbeville</code></pre>
-<p>We see that this division gives us a divided data set with the same keys as <code>byCounty</code>. So we can join this with <code>byCounty</code>:</p>
+<p>We see that this division gives us a divided data set with the same keys as <code>byCounty</code>. So we can join it with <code>byCounty</code>:</p>
 <pre class="r"><code>byCountyGeo &lt;- drJoin(housing = byCounty, geo = geo)</code></pre>
-<p>What this does is provide us with a new ddo (not a data frame anymore) where for each key, the value is a list with a data frame <code>housing</code> holding the time series data and a data frame <code>geo</code> holding the geographic data. We can see the structure of this for a subset with:</p>
+<p>What this does is provide us with a new ddo (not a distributed data frame anymore) where for each key, the value is a list with a data frame <code>housing</code> holding the time series data and a data frame <code>geo</code> holding the geographic data. We can see the structure of this for a subset with:</p>
 <pre class="r"><code>str(byCountyGeo[[1]])</code></pre>
 <pre><code>List of 2
  $ key  : chr &quot;county=Abbeville County|state=SC&quot;
@@ -371,7 +373,7 @@ $value
 </div>
 <div id="setting-up-a-visualization-database" class="section level3">
 <h3>Setting up a visualization database</h3>
-<p>For a Trelliscope display, we must connect to a “visualization database” (VDB), which is a directory on our computer where we are going to organize all of the information about our displays (we create many over the course of an analysis). Typically we will set up a single VDB for each project we are working on. We can do this with the <code>vdbConn()</code> function:</p>
+<p>For a Trelliscope display, we must connect to a “visualization database” (VDB), which is a directory on our computer where we are going to organize all of the information about our displays (we create many over the course of an analysis). Typically, we will set up a single VDB for each project we are working on. We can do this with the <code>vdbConn()</code> function:</p>
 <pre class="r"><code>vdbConn(&quot;vdb&quot;, name = &quot;tesseraTutorial&quot;)</code></pre>
 <p>This connects to a directory called <code>&quot;vdb&quot;</code> relative to our current working directory. R holds this connection in its global options so that subsequent calls will know where to put things without explicitly specifying the connection each time.</p>
 </div>
@@ -389,7 +391,7 @@ $value
 </div>
 <div id="creating-a-cognostics-function" class="section level3">
 <h3>Creating a cognostics function</h3>
-<p>Another optional thing we can do is specify a <em>cognostics</em> function for each subset. A cognostic is a metric that tells us an interesting attribute about a subset of data, and we can use cognostics to have more worthwhile interactions with all of the panels in the display. A cognostic function needs to return a list of metrics:</p>
+<p>Another optional thing we can do is specify a <em>cognostics</em> function that is applied to each subset. A cognostic is a metric that tells us an interesting attribute about a subset of data, and we can use cognostics to have more worthwhile interactions with all of the panels in the display. A cognostic function needs to return a list of metrics:</p>
 <pre class="r"><code>priceCog &lt;- function(x) { list(
   slope     = cog(lmCoef(x), desc = &quot;list price slope&quot;),
   meanList  = cogMean(x$medListPriceSqft),
@@ -397,7 +399,7 @@ $value
   nObs      = cog(length(which(!is.na(x$medListPriceSqft))),
     desc = &quot;number of non-NA list prices&quot;)
 )}</code></pre>
-<p>We use the <code>cog()</code> function to wrap our metrics so that we can provide a description for the cognostic, and we also employ special cognostics functions <code>cogMean()</code> and <code>cogRange()</code> to compute mean and range with a default description.</p>
+<p>We use the <code>cog()</code> function to wrap our metrics so that we can provide a description for the cognostic. We may also employ special cognostics functions like <code>cogMean()</code> and <code>cogRange()</code> to compute mean and range with a default description.</p>
 <p>We should test the cognostics function on a subset:</p>
 <pre class="r"><code>priceCog(byCounty[[1]]$value)</code></pre>
 <pre><code>$slope
@@ -426,14 +428,14 @@ $nObs
 <p>If you have been dutifully following along with this example in your own R console, you can now view the display with the following:</p>
 <pre class="r"><code>view()</code></pre>
 <p>If you have not been following along but are wondering what that <code>view()</code> command did, you can visit <a href="http://hafen.shinyapps.io/tesseraTutorial/" target="_blank">here</a> for an online version. You will find a list of displays to choose from, of which the one with the name <code>list_sold_vs_time_datadr_tut</code> is the one we just created. This brings up the point that you can share your Trelliscope displays online – more about that as well as how to use the viewer will be covered in the Trelliscope tutorial – but feel free to play around with the viewer.</p>
-<p>This covers the basics of datadr and a bit of <code>trelliscope</code>. Hopefully you now feel comfortable enough to dive in and try some things out. The remainder of this tutorial and the <a href="http://tessera.io/docs-trelliscope/">Trelliscope</a> tutorial will provide greater detail.</p>
+<p>This covers the basics of <code>datadr</code> and a bit of <code>trelliscope</code>. Hopefully you now feel comfortable enough to dive in and try some things out. The remainder of this tutorial and the <a href="http://tessera.io/docs-trelliscope/">Trelliscope</a> tutorial will provide greater detail.</p>
 </div>
 </div>
 <div id="for-plyr-dplyr-users" class="section level2">
 <h2>For plyr / dplyr Users</h2>
-<p>Now that we have seen some examples and have a good feel for what datadr can do, if you have used <code>plyr</code> or <code>dplyr</code> packages, you may be noticing a few similarities.</p>
-<p>If you have not used these packages before, you can skip this section, but if you have, we will go over a quick simple example of how to do the same thing in the three packages to help the <code>*plyr</code> user have a better understanding of how to map their knowledge of those packages to datadr.</p>
-<p>It is also worth discussing some of the similarites and differences to help understand when datadr is useful. We expand on this in the <a href="#faq">FAQ</a>. In a nutshell, datadr and <code>dplyr</code> are very different and are actually complementary. We often use the amazing features of <code>dplyr</code> for within-subset computations, but we need datadr to deal with complex data structures and potentially very large data.</p>
+<p>Now that we have seen some examples and have a good feel for what <code>datadr</code> can do, if you have used <code>plyr</code> or <code>dplyr</code> packages, you may be noticing a few similarities.</p>
+<p>If you have not used these packages before, you can skip this section, but if you have, we will go over a quick simple example of how to do the same thing in the three packages to help the <code>plyr</code> user have a better understanding of how to map their knowledge of those packages to <code>datadr</code>.</p>
+<p>It is also worth discussing some of the similarites and differences to help understand when <code>datadr</code> is useful. We expand on this in the <a href="#faq">FAQ</a>. In a nutshell, <code>datadr</code> and <code>dplyr</code> are very different and are actually complementary. We often use the amazing features of <code>dplyr</code> for within-subset computations, but we need <code>datadr</code> to deal with complex data structures and potentially very large data.</p>
 <div id="code-comparison" class="section level3">
 <h3>Code Comparison</h3>
 <p>For a simple example, we turn to the famous iris data. Suppose we want to compute the mean sepal length by species:</p>
@@ -442,26 +444,25 @@ $nObs
 <pre class="r"><code>library(plyr)
 
 ddply(iris, .(Species), function(x)
-  data.frame(msl = mean(x$Sepal.Length)))</code></pre>
+  data.frame(val = mean(x$Sepal.Length)))</code></pre>
 <p>With <code>plyr</code>, we are performing the split, apply, and combine all in the same step.</p>
 </div>
 <div id="with-dplyr" class="section level4">
 <h4>With <code>dplyr</code>:</h4>
 <pre class="r"><code>library(dplyr)
 
-bySpecies &lt;- group_by(iris, Species)
-summarise(bySpecies,
-  msl = mean(Sepal.Length))</code></pre>
+iris %&gt;%
+  group_by(Species) %&gt;%
+  summarise(val = mean(Sepal.Length))</code></pre>
 <p>Here, we call <code>group_by()</code> to create a <code>bySpecies</code> object, which is the same object as <code>iris</code> but with additional information about the indices of where the rows for each species are. Then we call <code>summarise()</code> which computes the mean sepal length for each group and returns the result as a data frame.</p>
 </div>
 <div id="with-datadr" class="section level4">
-<h4>With datadr:</h4>
+<h4>With <code>datadr</code>:</h4>
 <pre class="r"><code>library(datadr)
 
-bySpecies &lt;- divide(iris, by = &quot;Species&quot;)
-msl &lt;- addTransform(bySpecies, function(x)
-  data.frame(msl = mean(x$Sepal.Length)))
-recombine(msl, combRbind)</code></pre>
+divide(iris, by = &quot;Species&quot;) %&gt;%
+  addTransform(function(x) mean(x$Sepal.Length)) %&gt;%
+  recombine(combRbind)</code></pre>
 <p>Here, we call <code><a target='_blank' href='rd.html#divide'>divide()</a></code> to partition the iris data by species, resulting in a “distributed data frame”, called <code>bySpecies</code>. Note that this result is a new data object - an important and deliberate distinction. Then we call <code><a target='_blank' href='rd.html#addtransform'>addTransform()</a></code> to apply a function that computes the mean sepal length to each partition. Then we call <code><a target='_blank' href='rd.html#recombine'>recombine()</a></code> to bind all the results into a single data frame.</p>
 </div>
 </div>
@@ -471,7 +472,7 @@ recombine(msl, combRbind)</code></pre>
 <p>The outline for the remainder of this tutorial is as follows:</p>
 <ul>
 <li>First, we cover the foundational D&amp;R data structure, key-value pairs, and how they are used to build distributed data objects and distributed data frames.</li>
-<li>Next, we provide an introduction to the high-level division and recombination methods in datadr.</li>
+<li>Next, we provide an introduction to the high-level division and recombination methods in <code>datadr</code>.</li>
 <li>Then we discuss MapReduce - the lower-level language for accomplishing D&amp;R tasks - which is the engine for the higher-level D&amp;R methods. It is anticipated that the high-level language will be sufficient for most analysis tasks, but the lower-level approach is also exposed for special cases.</li>
 <li>We then cover some division-independent methods that do various computations across the entire data set, regardless of how it is divided, such as all-data quantiles.</li>
 <li>For all of these discussions, we use small data sets that fit in memory for illustrative purposes. This way everyone can follow along without having a large-scale backend like Hadoop running and configured. However, the true power of D&amp;R is with large data sets, and after introducing all of this material, we cover different backends for computation and storage that are currently supported for D&amp;R. The interface always remains the same regardless of the backend, but there are various things to discuss for each case. The backends discussed are:
@@ -1158,7 +1159,7 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
 qplot(y = splitRowDistn(byRandom),
   xlab = &quot;percentile&quot;, ylab = &quot;number of rows in subset&quot;)</code></pre>
 <p><img src="index_files/figure-html/byrandom_row_distn-1.png" title="" alt="" width="624" /></p>
-<p>We see that there are not exactly 10 rows in each subset, but 10 rows on average. The random replicate algorithm simply randomly assigns each row of the input data into the number of bins <span class="math"><em>K</em></span> determined by the total number of rows <span class="math"><em>n</em></span> in the data divided by the desired number of rows per subset. Thus the distribution of the number of rows in each subset is like a draw from a multinomial with number of trials <span class="math"><em>n</em></span> and event probabilities of being put into one of <span class="math"><em>K</em></span> bins as <span class="math"><em>p</em><sub><em>i</em></sub> = 1/<em>K</em>, <em>i</em> = 1, …, <em>K</em></span>. We are working on a scalable approach to randomly assign exactly <span class="math"><em>n</em>/<em>K</em></span> rows to each subset.</p>
+<p>We see that there are not exactly 10 rows in each subset, but 10 rows on average. The random replicate algorithm simply randomly assigns each row of the input data into the number of bins <span class="math inline"><em>K</em></span> determined by the total number of rows <span class="math inline"><em>n</em></span> in the data divided by the desired number of rows per subset. Thus the distribution of the number of rows in each subset is like a draw from a multinomial with number of trials <span class="math inline"><em>n</em></span> and event probabilities of being put into one of <span class="math inline"><em>K</em></span> bins as <span class="math inline"><em>p</em><sub><em>i</em></sub> = 1/<em>K</em>, <em>i</em> = 1, …, <em>K</em></span>. We are working on a scalable approach to randomly assign exactly <span class="math inline"><em>n</em>/<em>K</em></span> rows to each subset.</p>
 <p>The keys for random replicate divided data are simply labels indicating the bin:</p>
 <pre class="r"><code>head(getKeys(byRandom))</code></pre>
 <pre><code>[[1]]
@@ -1479,7 +1480,6 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
 
 * Other attributes: getKeys(), splitSizeDistn(), splitRowDistn(), summary()
 * Conditioning variables: edGroup</code></pre>
-
 <p>We can look at the distribution of number of people in each education group with the following simple recombination:</p>
 <p>We need to add a transformation to <code>byEdGroup</code> that simply compute the number of rows, and then use a <code><a target='_blank' href='rd.html#combrbind'>combRbind</a></code> recombine to collect all of the results in a single data frame:</p>
 <pre class="r"><code># add transformation to count number of people in each education group
@@ -1572,7 +1572,7 @@ recombine(adultGlm, combMeanCoef)</code></pre>
 <div id="fitting-a-glm-with-drblb" class="section level3">
 <h3>Fitting a GLM with <code>drBLB()</code></h3>
 <p>We can use the bag of little bootstraps (BLB) approach to fit a GLM to the data. The idea of bag of little bootstraps is to split the data into random subsets and apply a bootstrap method to each subset, compute a bootstrap metric to the result, and then average the metric across all subsets.</p>
-<p>One important thing to keep in mind is that BLB requires each subset be resampled with with <span class="math"><em>N</em></span> replications, <span class="math"><em>N</em></span> being the total number of rows in the entire data set. Since each subset has much fewer than <span class="math"><em>N</em></span> rows, say <span class="math"><em>n</em></span>, we can imitate taking <span class="math"><em>N</em></span> draws by sampling from a multinomial with <span class="math"><em>n</em></span> bins with uniform probability and assigning weights to each of the <span class="math"><em>n</em></span> observations in the subset and computing weights from these and passing that as the <code>weights</code> argument to <code><a target='_blank' href='rd.html#glm'>glm()</a></code>. Any R method that meets BLB requirements and accommodates this sampling scheme in one way or another can be used with <code><a target='_blank' href='rd.html#drblb'>drBLB()</a></code>.</p>
+<p>One important thing to keep in mind is that BLB requires each subset be resampled with with <span class="math inline"><em>N</em></span> replications, <span class="math inline"><em>N</em></span> being the total number of rows in the entire data set. Since each subset has much fewer than <span class="math inline"><em>N</em></span> rows, say <span class="math inline"><em>n</em></span>, we can imitate taking <span class="math inline"><em>N</em></span> draws by sampling from a multinomial with <span class="math inline"><em>n</em></span> bins with uniform probability and assigning weights to each of the <span class="math inline"><em>n</em></span> observations in the subset and computing weights from these and passing that as the <code>weights</code> argument to <code><a target='_blank' href='rd.html#glm'>glm()</a></code>. Any R method that meets BLB requirements and accommodates this sampling scheme in one way or another can be used with <code><a target='_blank' href='rd.html#drblb'>drBLB()</a></code>.</p>
 <p>We apply <code><a target='_blank' href='rd.html#drblb'>drBLB()</a></code> to each subset, specifying the <code>statistic</code> to be computed for each bootstrap sample, the <code>metric</code> to compute on the statistics, and the number of bootstrap replications <code>R</code>. We also need to tell it the total number of rows in the data set. Right now, <code><a target='_blank' href='rd.html#drblb'>drBLB()</a></code> simply returns a numeric vector, which is combined using <code><a target='_blank' href='rd.html#combmean'>combMean()</a></code>.</p>
 <pre class="r"><code># add bag of little bootstraps transformation
 adultBlb &lt;- addTransform(rrAdult, function(x) {
@@ -1859,6 +1859,18 @@ map <- expression({
 <h3>The <code>setup</code> expression</h3>
 <p>In addition to <code>map</code> and <code>reduce</code>, another expression that can be provided to <code>mrExec()</code> is <code>setup</code>. This expression is executed prior to any map or reduce tasks, and is typically used to load a required library, etc. Depending on the backend, your <code>map</code> and <code>reduce</code> expression code may be executed on multiple nodes of a cluster, and these remote R sessions need to have all of the data and packages available to do the correct computation on your data.</p>
 <p>For example, suppose in the mean by species example that we wanted to use the <code>plyr</code> package to compute the mean by species inside each map task. Then we could specify:</p>
+<!-- In order to load plyr, some other packages need to be unloaded first because they import plyr -->
+<pre><code>$trelliscope
+NULL
+
+$ggplot2
+NULL
+
+$scales
+NULL
+
+$reshape2
+NULL</code></pre>
 <pre class="r"><code># example of a setup expression
 setup &lt;- expression({
   suppressMessages(library(plyr))
@@ -2157,7 +2169,7 @@ irisDiskConn &lt;- localDiskConn(file.path(tempdir(), &quot;irisKV&quot;), autoY
 <pre class="r"><code># print the connection object
 irisDiskConn</code></pre>
 <pre><code>localDiskConn connection
-  loc=/private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpjVNvin/irisKV; nBins=0</code></pre>
+  loc=/private/var/folders/fv/tlx166cx4rggg3nrbl9tckc5vg_gm4/T/RtmpnckohL/irisKV; nBins=0</code></pre>
 <p><code>irisDiskConn</code> is simply a “kvConnection” object that points to the directory. Meta data containing data attributes is also stored in this directory. If we lose the connection object <code>irisDiskConn</code>, the data still stays on the disk, and we can get our connection back by calling</p>
 <pre class="r"><code>irisDiskConn &lt;- localDiskConn(file.path(tempdir(), &quot;irisKV&quot;))</code></pre>
 <p>Any meta data that was there is also read in. If you would like to connect to a directory but reset all meta data, you can call <code><a target='_blank' href='rd.html#localdiskconn'>localDiskConn()</a></code> with <code>reset = TRUE</code>.</p>
@@ -2558,7 +2570,7 @@ system(paste(&quot;head&quot;, csvFile))</code></pre>
 irisConn &lt;- localDiskConn(file.path(tempdir(), &quot;iris&quot;), autoYes = TRUE)
 # read in iris data
 irisData &lt;- drRead.csv(csvFile, rowsPerBlock = 20, output = irisConn)</code></pre>
-<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpjVNvin/iris.csv 
+<pre><code>-- In file  /private/var/folders/fv/tlx166cx4rggg3nrbl9tckc5vg_gm4/T/RtmpnckohL/iris.csv 
   Processing chunk  1 
   Processing chunk  2 
   Processing chunk  3 
