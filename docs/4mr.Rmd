@@ -290,6 +290,11 @@ In addition to `map` and `reduce`, another expression that can be provided to `m
 
 For example, suppose in the mean by species example that we wanted to use the `plyr` package to compute the mean by species inside each map task.  Then we could specify:
 
+<!-- In order to load plyr, some other packages need to be unloaded first because they import plyr -->
+```{r unloadNamespaces, echo = FALSE}
+sapply(c("trelliscope", "ggplot2", "scales", "reshape2"), unloadNamespace)
+```
+
 ```{r mean_setup}
 # example of a setup expression
 setup <- expression({
