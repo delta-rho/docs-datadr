@@ -2169,7 +2169,7 @@ irisDiskConn &lt;- localDiskConn(file.path(tempdir(), &quot;irisKV&quot;), autoY
 <pre class="r"><code># print the connection object
 irisDiskConn</code></pre>
 <pre><code>localDiskConn connection
-  loc=/private/var/folders/fv/tlx166cx4rggg3nrbl9tckc5vg_gm4/T/RtmpnckohL/irisKV; nBins=0</code></pre>
+  loc=/private/var/folders/fv/tlx166cx4rggg3nrbl9tckc5vg_gm4/T/Rtmpjh2BBJ/irisKV; nBins=0</code></pre>
 <p><code>irisDiskConn</code> is simply a “kvConnection” object that points to the directory. Meta data containing data attributes is also stored in this directory. If we lose the connection object <code>irisDiskConn</code>, the data still stays on the disk, and we can get our connection back by calling</p>
 <pre class="r"><code>irisDiskConn &lt;- localDiskConn(file.path(tempdir(), &quot;irisKV&quot;))</code></pre>
 <p>Any meta data that was there is also read in. If you would like to connect to a directory but reset all meta data, you can call <code><a target='_blank' href='rd.html#localdiskconn'>localDiskConn()</a></code> with <code>reset = TRUE</code>.</p>
@@ -2570,7 +2570,7 @@ system(paste(&quot;head&quot;, csvFile))</code></pre>
 irisConn &lt;- localDiskConn(file.path(tempdir(), &quot;iris&quot;), autoYes = TRUE)
 # read in iris data
 irisData &lt;- drRead.csv(csvFile, rowsPerBlock = 20, output = irisConn)</code></pre>
-<pre><code>-- In file  /private/var/folders/fv/tlx166cx4rggg3nrbl9tckc5vg_gm4/T/RtmpnckohL/iris.csv 
+<pre><code>-- In file  /private/var/folders/fv/tlx166cx4rggg3nrbl9tckc5vg_gm4/T/Rtmpjh2BBJ/iris.csv 
   Processing chunk  1 
   Processing chunk  2 
   Processing chunk  3 
