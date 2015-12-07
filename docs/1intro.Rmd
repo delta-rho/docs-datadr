@@ -36,18 +36,18 @@ We'll first lay out some of the major data types and functions in `datadr` to pr
 
 The two major data types in `datadr` are distributed data frames and distributed data objects.  A *distributed data frame (ddf)* can be thought of as a data frame that is split into chunks -- each chunk is a subset of rows of the data frame -- which may reside across nodes of a cluster (hence "distributed").  A *distributed data object (ddo)* is a similar notion except that each subset can be an object with arbitrary structure.  Every distributed data frame is also a distributed data object.
 
-The data structure we use to store ddo/ddf objects are *key-value pairs*.  For our purposes, the key is typically a label that uniqueley identifies a subset, and the value is the subset corresponding to the key.  Thus, a ddo/ddf is essentially a list, where each element of the list contains a key-value pair.
+The data structure we use to store ddo/ddf objects are *key-value pairs*.  For our purposes, the key is typically a label that uniqueley identifies a subset, and the value is the subset of the data corresponding to the key.  Thus, a ddo/ddf is essentially a list, where each element of the list contains a key-value pair.
 
 ### Functions
 
-Functions in `datadr` can be categorized according to the mechanisms they provide for distributed data types and backend connections, data operations, division-independent operations, and date ingest operations.
+Functions in `datadr` can be categorized according to the mechanisms they provide for working with data: distributed data types and backend connections, data operations, division-independent operations, and data ingest operations.
 
 #### Distributed data types / backend connections
 
 Currently, there are three ways to store data using `datadr`:  in memory, on a standard file system (e.g. a hard drive), and on the Hadoop Distributed File System (HDFS).  Distributed data objects stored in memory do not require a connection to a backend.  However, datasets that exceed the memory capabilities must be stored to disk or to HDFS via a backend connection:
 
 - `r rdl("localDiskConn()")`: instantiate backend connections to ddo / ddf objects that are persisted (i.e. 'permanently' stored) to a local disk connection
-- `r rdl("hdfsConn()")`: instantiate backend connections to ddo / ddf objects that are persisted to HDFS 
+- `r rdl("hdfsConn()")`: instantiate backend connections to ddo / ddf objects that are persisted to HDFS
 - `r rdl("ddf()")`: instantiate a ddo from a backend connection
 - `r rdl("ddo()")`: instantiate a ddf from a backend connection
 
@@ -62,7 +62,7 @@ Currently, there are three ways to store data using `datadr`:  in memory, on a s
 - `r rdl("drSubset()")`: return a subset data frame of a ddf
 - `r rdl("mrExec()")`: run a traditional MapReduce job on a ddo/ddf
 
-All of these operations kick off MapReduce jobs to perform the desired computation.  In `datadr`, we almost always want a new data set result right away, so there is not a prevailing notion of *deferred evaluation* as in other distributed computing frameworks.  The only exception is a function that can be applied prior to or after any of these data operations that adds a transformation to be applied to each subset at the time of the next data operation.  This function is `r rdl("addTransform()")` and will be discussed in greater detail later in the tutorial
+All of these operations kick off MapReduce jobs to perform the desired computation.  In `datadr`, we almost always want a new data set result right away, so there is not a prevailing notion of *deferred evaluation* as in other distributed computing frameworks.  The only exception is a function that can be applied prior to or after any of these data operations that adds a transformation to be applied to each subset at the time of the next data operation.  This function is `r rdl("addTransform()")` and will be discussed in greater detail later in the tutorial.
 
 #### Division-independent operations
 
@@ -142,7 +142,7 @@ summary(byCounty)
 
 Since `datadr` knows that `byCounty` is a ddf, and because we set `update = TRUE`, after the division operation global summary statistics were computed for each of the variables.
 
-Suppose we want a more meaningful global summary, such as computing quantiles.  `datadr` can do this in a division-independent way with `r rdl("drQuantile()")`.  For example, let's look at quantiles for the median list price and plot them using `r rdl("xyplot()")` from the `lattice` package:
+Suppose we want a more meaningful global summary, such as computing quantiles.  `datadr` can do this in a division-independent way with `r rdl("drQuantile()")`.  For example, let's look at quantiles for the median list price and plot them using `xyplot()` from the `lattice` package:
 
 ```{r quickstart_quantile, eval=TRUE, echo=TRUE}
 priceQ <- drQuantile(byCounty, var = "medListPriceSqft")
@@ -162,7 +162,7 @@ Now, suppose we wish to apply an analytic method to each subset of our data and 
 We can create a function that operates on an input data frame `x` that does this:
 
 ```{r quickstart_lm, eval=TRUE, echo=TRUE}
-lmCoef <- function(x) 
+lmCoef <- function(x)
   coef(lm(medListPriceSqft ~ time, data = x))[2]
 ```
 

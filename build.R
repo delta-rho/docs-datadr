@@ -1,3 +1,19 @@
+knitr::opts_knit$set(root.dir = normalizePath("."))
+
+packagedocs::render_docs(
+  code_path = "~/Documents/Code/Tessera/hafen/datadr",
+  docs_path = ".",             # location of docs directory
+  package_name = "datadr",     # name of the package
+  main_toc_collapse = TRUE,    # use collapsing toc on main page
+  rd_toc_collapse = TRUE,      # use collapsing toc on rd page
+  lib_dir = "assets",          # put assets in "assets" directory
+  render_main = TRUE,          # render main page
+  render_rd = TRUE,            # render rd page
+  view_output = TRUE,          # look at the output after render
+  rd_index = "./rd_index.yaml" # optional path to rd layout yaml
+)
+
+
 ## load packages (and install if not on system)
 if(!requireNamespace("devtools"))
   install.packages("devtools")
@@ -13,8 +29,7 @@ if(!require("housingData"))
   devtools::install_github("hafen/housingData")
 
 # make sure your working directory is set to repo base directory
-#code_path <- "~/Documents/Code/Tessera/hafen/datadr"
-code_path <- "~/Work/github/datadr"
+code_path <- "~/Documents/Code/Tessera/hafen/datadr"
 
 # set some options
 pdof <- package_docs(lib_dir = "assets", toc_collapse = TRUE)
@@ -29,7 +44,7 @@ render("index.Rmd", output_format = pdof)
 check_output("index.html")
 
 ## This is a nasty hack to get around this error when I run .\build :
-## Error in pkg_sd_path(pkg, site_path = site_path) : 
+## Error in pkg_sd_path(pkg, site_path = site_path) :
 ##   Folder inst/staticdocs doesn't exist. Specify site_path or create a package folder inst/staticdocs.
 ## Calls: source ... render_rd -> rd_template -> as.sd_package -> pkg_sd_path
 
