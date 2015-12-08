@@ -1,4 +1,10 @@
-library(datadr); library(housingData)
+## install packagedocs if not installed:
+# options(repos = c(tessera = "http://packages.tessera.io",
+#   getOption("repos")))
+# install.packages("packagedocs")
+
+library(datadr)
+library(housingData)
 knitr::opts_knit$set(root.dir = normalizePath("."))
 
 packagedocs::render_docs(
