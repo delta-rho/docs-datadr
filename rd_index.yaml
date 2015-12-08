@@ -4,6 +4,10 @@
 #    topics <- gsub("\\.Rd", "", names(db))
 #    cat(paste(topics, collapse = "\n"))
 # 2. arrange the topic names into sections as desired in the format below:
+## If you need to see which topics are missing, do the following in addition:
+# cur <- yaml::yaml.load_file("rd_index.yaml")
+# cur <- unlist(lapply(cur, function(x) x$topics))
+# cat(paste(setdiff(topics, cur), collapse = "\n")
 -
   section_name: Key-Value Pairs
   description:
