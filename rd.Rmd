@@ -19,7 +19,7 @@ brand: |-
 <h1>Divide and Recombine for Large, Complex Data</h1>
 
 <p><strong>Authors:</strong> <a href="mailto:rhafen@gmail.com">Ryan Hafen</a> [aut, cre],Landon Sego [ctb]</p>
-<p><strong>Version:</strong> 0.7.7</p>
+<p><strong>Version:</strong> 0.8.0</p>
 <p><strong>License:</strong> BSD_3_clause + file LICENSE</p>
 
 <h4>Description</h4>
@@ -44,8 +44,8 @@ dplyr</p>
 
 <h4>Suggests</h4>
 <p>
-testthat (>= 0.8.1),
-roxygen2 (>= 4.0.0),
+testthat (>= 0.11.0),
+roxygen2 (>= 5.0.1),
 Rhipe,
 SparkR</p>
 
@@ -1366,7 +1366,7 @@ Ryan Hafen
 <p class="rd-p">Divide a ddo/ddf object into subsets based on different criteria</p>
 
 <h4>Usage</h4>
-<pre class="r"><code>divide(data, by = NULL, spill = 1e+06, filterFn = NULL, bsvFn = NULL,
+<pre class="r"><code>divide(data, by = NULL, spill = 1000000, filterFn = NULL, bsvFn = NULL,
   output = NULL, overwrite = FALSE, preTransFn = NULL,
   postTransFn = NULL, params = NULL, packages = NULL, control = NULL,
   update = FALSE, verbose = TRUE)</code></pre>
@@ -1606,10 +1606,8 @@ bySpecies
 # Note a tranformation is not present in the attributes
 names(attributes(bySpecies))
 
-############################################################
-# A transform that operates only on values of the key-value
-# pairs
-############################################################
+## A transform that operates only on values of the key-value pairs
+##----------------------------------------------------------------
 
 # Create a function that will calculate the mean of each variable in
 # in a subset. The calls to 'as.data.frame()' and 't()' convert the
@@ -1633,17 +1631,16 @@ names(attributes(bySpeciesTransformed))
 # the subsets:
 bySpeciesTransformed[[1]]
 
-# We can also apply the transformation by calling 'recombine()'.  In this
-# case, we collapse the output into a single data.frame using the
-# 'combRbind' method
+# The transformation is automatically applied when calling any data
+# operation.  For example, if can call 'recombine()' with 'combRbind'
+# we will get a data frame of the column means for each subset:
 varMeans <- recombine(bySpeciesTransformed, combine = combRbind)
 varMeans
 
-############################################################
-# A transform that operates on both keys and values
-############################################################
+## A transform that operates on both keys and values
+##---------------------------------------------------------
 
-# We can also create a transformation that uses both the key and values
+# We can also create a transformation that uses both the keys and values
 # It will select the first row of the value, and append '-firstRow' to
 # the key
 aTransform <- function(key, val) {
@@ -1731,7 +1728,7 @@ the some action is taken with the data (e.g. a call to <code><a href=#recombine>
 
   <p class="rd-p">Calling <code>drPersist()</code> on the ddo/ddf makes the transformation permanent (persisted).  In the case of a local disk
 connection (via <code><a href=#localdiskconn>localDiskConn</a></code>) or HDFS connection (via <code><a href=#hdfsconn>hdfsConn</a></code>), the transformed data
-are written to disc.</p>
+are written to disk.</p>
 
 
   <h4>Value</h4>
@@ -1745,10 +1742,10 @@ a ddo or ddf object with the transformation evaluated on the data
 <h4>Examples</h4>
 <pre class="r"><code>bySpecies <- divide(iris, by = "Species")
 
-# Create the transformation and add it to bySpecies 
+# Create the transformation and add it to bySpecies
 bySpeciesSepal <- addTransform(bySpecies, function(x) x[,c("Sepal.Length", "Sepal.Width")])
 
-# Note the transformation is 'pending' a data action 
+# Note the transformation is 'pending' a data action
 bySpeciesSepal
 
 # Make the tranformation permanent (persistent)
@@ -1810,7 +1807,7 @@ NOTE: This argument is now deprecated in favor of <code><a href=#addtransform>ad
   <h4>Value</h4>
 
   <p class="rd-p"><dl>
-Depends on <code>combine</code>:  this could be a distributed data object, a data frame, a key-value list, etc.  See examples.
+Depends on <code>combine</code>: this could be a distributed data object, a data frame, a key-value list, etc.  See examples.
 </dl></p>
 
 
@@ -1828,9 +1825,8 @@ Depends on <code>combine</code>:  this could be a distributed data object, a dat
 
 
 <h4>Examples</h4>
-<pre class="r"><code>############################################################
-# In memory example
-############################################################
+<pre class="r"><code>## In memory example
+##---------------------------------------------------------
 
 # Begin with an in-memory ddf (backed by kvMemory)
 bySpecies <- divide(iris, by = "Species")
@@ -1853,9 +1849,8 @@ recombine(bySpeciesTransformed, combine = combDdf)
 # Or we could recombine using 'combRbind()' and produce a data frame:
 recombine(bySpeciesTransformed, combine = combRbind)
 
-############################################################
-# Local disk connection example with parallization
-############################################################
+## Local disk connection example with parallelization
+##---------------------------------------------------------
 
 # Create a 2-node cluster that can be used to process in parallel
 cl <- parallel::makeCluster(2)
@@ -1882,7 +1877,8 @@ tmpDir2 <- file.path(tempdir(), "divide_example2")
 loc2 <- localDiskConn(tmpDir2, autoYes = TRUE)
 
 # Recombine the data using the transformation
-bySpeciesMean <- recombine(bySpeciesTransformed, combine = combDdf, output = loc2, control = control)
+bySpeciesMean <- recombine(bySpeciesTransformed,
+  combine = combDdf, output = loc2, control = control)
 bySpeciesMean
 bySpeciesMean[[1]]
 
@@ -1937,7 +1933,7 @@ Ryan Hafen
 
   <h4>References</h4>
 
-  <p class="rd-p">BLB paper</p>
+  <p class="rd-p">Kleiner, Ariel, et al. "A scalable bootstrap for massive data." Journal of the Royal Statistical Society: Series B (Statistical Methodology) 76.4 (2014): 795-816.</p>
 
 
 
@@ -1987,13 +1983,14 @@ An object of class <code>drCoef</code> that contains the lm coefficients and oth
 bySpecies <- divide(iris, by = "Species")
 
 # A function to fit a multiple linear regression model to each species
-linearReg <- function(x) {
+linearReg <- function(x)
   drLM(Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width,
        data = x)
-}
 
 # Apply the transform and combine using 'combMeanCoef'
-recombine(addTransform(bySpecies, linearReg), combine = combMeanCoef)</code></pre>
+bySpecies %>%
+  addTransform(linearReg) %>%
+  recombine(combMeanCoef)</code></pre>
 
 <h4>See also</h4>
 
@@ -2045,13 +2042,14 @@ irisD$Sepal <- as.numeric(irisD$Sepal.Length > median(irisD$Sepal.Length))
 bySpecies <- divide(irisD, by = "Species")
 
 # A function to fit a logistic regression model to each species
-logisticReg <- function(x) {
+logisticReg <- function(x)
   drGLM(Sepal ~ Sepal.Width + Petal.Length + Petal.Width,
         data = x, family = binomial())
-}
 
 # Apply the transform and combine using 'combMeanCoef'
-recombine(addTransform(bySpecies, logisticReg), combine = combMeanCoef)</code></pre>
+bySpecies %>%
+  addTransform(logisticReg) %>%
+  recombine(combMeanCoef)</code></pre>
 
 <h4>See also</h4>
 
@@ -2072,7 +2070,13 @@ Ryan Hafen
 <p class="rd-p">"Collect" recombination - collect the results into a local list of key-value pairs</p>
 
 <h4>Usage</h4>
-<pre class="r"><code>recombine(distributed_data_object, combine = combCollect, ...)</code></pre>
+<pre class="r"><code>combCollect(...)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">Additional list elements that will be added to the returned object</dd>
+</dl>
 
   <h4>Details</h4>
 
@@ -2090,11 +2094,16 @@ meanPetal <- function(x) mean(x$Petal.Width)
 # Combine the results using rbind
 combined <- recombine(addTransform(bySpecies, meanPetal), combine = combCollect)
 class(combined)
-combined</code></pre>
+combined
+
+# A more concise (and readable) way to do it
+bySpecies %>%
+  addTransform(meanPetal) %>%
+  recombine(combCollect)</code></pre>
 
 <h4>See also</h4>
 
-<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combmean>combMean</a></code>
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combddf>combDdf</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combmean>combMean</a></code>
 
 
 <h4>Author</h4>
@@ -2111,7 +2120,13 @@ Ryan Hafen
 <p class="rd-p">"DDO" recombination - simply collect the results into a "ddo" object</p>
 
 <h4>Usage</h4>
-<pre class="r"><code>recombine(distributed_data_object, combine = combDdo, ...)</code></pre>
+<pre class="r"><code>combDdo(...)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">additional attributes to define the combiner (currently only used internally)</dd>
+</dl>
 
   <h4>Details</h4>
 
@@ -2132,7 +2147,12 @@ listTrans <- function(x) {
 # Apply the transform and combine using combDdo
 combined <- recombine(addTransform(bySpecies, listTrans), combine = combDdo)
 combined
-combined[[1]]</code></pre>
+combined[[1]]
+
+# A more concise (and readable) way to do it
+bySpecies %>%
+  addTransform(listTrans) %>%
+  recombine(combDdo)</code></pre>
 
 <h4>See also</h4>
 
@@ -2153,7 +2173,13 @@ Ryan Hafen
 <p class="rd-p">"DDF" recombination - results into a "ddf" object, rbinding if necessary</p>
 
 <h4>Usage</h4>
-<pre class="r"><code>recombine(distributed_data_object, combine = combDdf, ...)</code></pre>
+<pre class="r"><code>combDdf(...)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">additional attributes to define the combiner (currently only used internally)</dd>
+</dl>
 
   <h4>Details</h4>
 
@@ -2168,9 +2194,8 @@ collapsed together via <code><a href=http://www.inside-r.org/r-doc/base/cbind>rb
 <pre class="r"><code># Divide the iris data
 bySpecies <- divide(iris, by = "Species")
 
-############################################################
-# Simple combination to form a ddf
-############################################################
+## Simple combination to form a ddf
+##---------------------------------------------------------
 
 # Add a transform that selects the petal width and length variables
 selVars <- function(x) x[,c("Petal.Width", "Petal.Length")]
@@ -2180,9 +2205,13 @@ combined <- recombine(addTransform(bySpecies, selVars), combine = combDdf)
 combined
 combined[[1]]
 
-############################################################
-# Combination that involves rbinding to give the ddf
-############################################################
+# A more concise (and readable) way to do it
+bySpecies %>%
+  addTransform(selVars) %>%
+  recombine(combDdf)
+
+## Combination that involves rbinding to give the ddf
+##---------------------------------------------------------
 
 # A transformation that returns a list
 listTrans <- function(x) {
@@ -2208,7 +2237,7 @@ identical(out1, out2$value)</code></pre>
 
 <h4>See also</h4>
 
-<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combddo>combDdo</a></code>
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combddf>combDdf</a></code>
 
 
 <h4>Author</h4>
@@ -2222,10 +2251,16 @@ Ryan Hafen
 
 <h3>"rbind" Recombination</h3>
 
-<p class="rd-p">"rbind" recombination - Combine divisions by row binding</p>
+<p class="rd-p">"rbind" recombination - Combine ddf divisions by row binding</p>
 
 <h4>Usage</h4>
-<pre class="r"><code>recombine(distributed_data_object, combine = combRbind, ...)</code></pre>
+<pre class="r"><code>combRbind(...)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">additional attributes to define the combiner (currently only used internally)</dd>
+</dl>
 
   <h4>Details</h4>
 
@@ -2245,11 +2280,16 @@ sdCol <- function(x) as.data.frame(t(apply(x, 2, sd)))
 # Combine the results using rbind
 combined <- recombine(addTransform(bySpecies, sdCol), combine = combRbind)
 class(combined)
-combined</code></pre>
+combined
+
+# A more concise (and readable) way to do it
+bySpecies %>%
+  addTransform(sdCol) %>%
+  recombine(combRbind)</code></pre>
 
 <h4>See also</h4>
 
-<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combmean>combMean</a></code>
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combddf>combDdf</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>, <code><a href=#combmean>combMean</a></code>
 
 
 <h4>Author</h4>
@@ -2266,7 +2306,13 @@ Ryan Hafen
 <p class="rd-p">Mean recombination -- Calculate the elementwise mean of a vector in each value</p>
 
 <h4>Usage</h4>
-<pre class="r"><code>recombine(distributed_data_object, combine = combMean, ...)</code></pre>
+<pre class="r"><code>combMean(...)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">additional attributes to define the combiner (currently only used internally)</dd>
+</dl>
 
   <h4>Details</h4>
 
@@ -2291,6 +2337,11 @@ bySpeciesTrans[[1]]
 out1 <- recombine(bySpeciesTrans, combine = combMean)
 out1
 
+# A more concise (and readable) way to do it
+bySpecies %>%
+  addTransform(function(x) apply(x, 2, sum)) %>%
+  recombine(combMean)
+
 # This manual, non-datadr approach illustrates the above computation
 
 # This step mimics the transformation above
@@ -2306,7 +2357,7 @@ identical(out1, out2)</code></pre>
 
 <h4>See also</h4>
 
-<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combddf>combDdf</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combmeancoef>combMeanCoef</a></code>
 
 
 <h4>Author</h4>
@@ -2323,7 +2374,13 @@ Ryan Hafen
 <p class="rd-p">Mean coefficient recombination -- Calculate the weighted average of parameter estimates for a model fit to each subset</p>
 
 <h4>Usage</h4>
-<pre class="r"><code>recombine(distributed_data_object, combine = combMeanCoef, ...)</code></pre>
+<pre class="r"><code>combMeanCoef(...)</code></pre>
+
+<h4>Arguments</h4>
+<dl class="rd-dl">
+  <dt>...</dt>
+  <dd class="rd-dd">additional attributes to define the combiner (currently only used internally)</dd>
+</dl>
 
   <h4>Details</h4>
 
@@ -2354,6 +2411,11 @@ bySpeciesFit <- addTransform(bySpecies, lmTrans)
 out1 <- recombine(bySpeciesFit, combine = combMeanCoef)
 out1
 
+# A more concise (and readable) way to do it
+bySpecies %>%
+  addTransform(lmTrans) %>%
+  recombine(combMeanCoef)
+
 # The following illustrates an equivalent, but more tedious approach
 lmTrans2 <- function(x) t(c(coef(lm(Sepal.Length ~ Sepal.Width, data = x)), n = nrow(x)))
 res <- recombine(addTransform(bySpecies, lmTrans2), combine = combRbind)
@@ -2367,7 +2429,7 @@ identical(out1, out2)</code></pre>
 
 <h4>See also</h4>
 
-<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#rrdiv>rrDiv</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combmean>combMean</a></code>
+<code><a href=#divide>divide</a></code>, <code><a href=#recombine>recombine</a></code>, <code><a href=#rrdiv>rrDiv</a></code>, <code><a href=#combcollect>combCollect</a></code>, <code><a href=#combddo>combDdo</a></code>, <code><a href=#combddf>combDdf</a></code>, <code><a href=#combrbind>combRbind</a></code>, <code><a href=#combmean>combMean</a></code>
 
 
 <h4>Author</h4>
@@ -2590,7 +2652,7 @@ sampleRes <- drSample(bySpecies, fraction = 0.25)</code></pre>
 
 <h4>Usage</h4>
 <pre class="r"><code>drSubset(data, subset = NULL, select = NULL, drop = FALSE,
-  preTransFn = NULL, maxRows = 5e+05, params = NULL, packages = NULL,
+  preTransFn = NULL, maxRows = 500000, params = NULL, packages = NULL,
   control = NULL, verbose = TRUE)</code></pre>
 
 <h4>Arguments</h4>

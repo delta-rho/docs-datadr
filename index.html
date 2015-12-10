@@ -502,8 +502,8 @@ list(1:5, rnorm(10))</code></pre>
 [1] 1 2 3 4 5
 
 [[2]]
- [1]  0.31152547  0.31436859  0.35928914 -0.73047316  0.03572991
- [6]  0.11297506  1.42855203  0.98340378 -0.62245679 -0.73153600</code></pre>
+ [1] -1.2070657  0.2774292  1.0844412 -2.3456977  0.4291247  0.5060559
+ [7] -0.5747400 -0.5466319 -0.5644520 -0.8900378</code></pre>
 <p>is a key-value pair with integers 1-5 as the key and 10 random normals as the value. Typically, a key is used as a unique identifier for the value. For datadr it is recommended to make the key a simple string when possible.</p>
 <p>There is a convenience function <code><a target='_blank' href='rd.html#kvpair'>kvPair()</a></code> for specifying a key-value pair:</p>
 <pre class="r"><code># using kvPair
@@ -512,8 +512,8 @@ kvPair(1:5, rnorm(10))</code></pre>
 [1] 1 2 3 4 5
 
 $value
- [1] -0.51666972 -1.75073344  0.88010416  1.37001035 -1.68732684
- [6] -0.62743621  0.01831663  0.70524346 -0.64701901  0.86818087</code></pre>
+ [1] -0.47719270 -0.99838644 -0.77625389  0.06445882  0.95949406
+ [6] -0.11028549 -0.51100951 -0.91119542 -0.83717168  2.41583518</code></pre>
 <p>This provides names for the list elements and is a useful function when an operation must explicitly know that it is dealing with a key-value pair and not just a list.</p>
 </div>
 <div id="key-value-pair-collections" class="section level3">
@@ -1342,10 +1342,10 @@ $value
 <p>Here, the default <code><a target='_blank' href='rd.html#combcollect'>combCollect</a></code> was used to combine the results, giving us a list of key-value pairs with the value being the mean petal width.</p>
 <p>If we would like the result to be a data frame we can use <code>combine=combRbind</code>:</p>
 <pre class="r"><code>recombine(mpw, combRbind)</code></pre>
-<pre><code>      Species   val
-1:     setosa 0.246
-2: versicolor 1.326
-3:  virginica 2.026</code></pre>
+<pre><code>     Species   val
+1     setosa 0.246
+2 versicolor 1.326
+3  virginica 2.026</code></pre>
 <p>The scalar mean is coerced into a data frame. Note that by default if the input data keys are characters, they will be added to the data frame.</p>
 </div>
 <div id="combiners-that-return-a-new-ddoddf" class="section level4">
@@ -1487,18 +1487,18 @@ byEdGroupNrow &lt;- addTransform(byEdGroup, function(x) nrow(x))
 # recombine into a data frame
 edGroupTable &lt;- recombine(byEdGroupNrow, combRbind)
 edGroupTable</code></pre>
-<pre><code>            edGroup   val
- 1:      Assoc-acdm  1067
- 2:       Assoc-voc  1382
- 3:       Bachelors  5355
- 4:       Doctorate   413
- 5:         HS-grad 10501
- 6:         Masters  1723
- 7:     Prof-school   576
- 8:    Some-college  7291
- 9: Some-elementary   501
-10:         Some-HS  2541
-11:     Some-middle  1160</code></pre>
+<pre><code>           edGroup   val
+1       Assoc-acdm  1067
+2        Assoc-voc  1382
+3        Bachelors  5355
+4        Doctorate   413
+5          HS-grad 10501
+6          Masters  1723
+7      Prof-school   576
+8     Some-college  7291
+9  Some-elementary   501
+10         Some-HS  2541
+11     Some-middle  1160</code></pre>
 <p>A similar dotplot as before can be made with this data.</p>
 </div>
 <div id="investigating-data-by-education-group" class="section level3">
@@ -1513,18 +1513,18 @@ byEdGroupSR &lt;- addTransform(byEdGroup, function(x) {
 # recombine into a data frame
 sexRatio &lt;- recombine(byEdGroupSR, combRbind)
 sexRatio</code></pre>
-<pre><code>            edGroup maleFemaleRatio
- 1:      Assoc-acdm        1.534442
- 2:       Assoc-voc        1.764000
- 3:       Bachelors        2.307597
- 4:       Doctorate        3.802326
- 5:         HS-grad        2.097640
- 6:         Masters        2.214552
- 7:     Prof-school        5.260870
- 8:    Some-college        1.598361
- 9: Some-elementary        2.853846
-10:         Some-HS        1.917336
-11:     Some-middle        2.815789</code></pre>
+<pre><code>           edGroup maleFemaleRatio
+1       Assoc-acdm        1.534442
+2        Assoc-voc        1.764000
+3        Bachelors        2.307597
+4        Doctorate        3.802326
+5          HS-grad        2.097640
+6          Masters        2.214552
+7      Prof-school        5.260870
+8     Some-college        1.598361
+9  Some-elementary        2.853846
+10         Some-HS        1.917336
+11     Some-middle        2.815789</code></pre>
 <p>We can visualize it with the following:</p>
 <pre class="r"><code># make dotplot of male/female ratio by education group
 sexRatio$edGroup &lt;- with(sexRatio, reorder(edGroup, maleFemaleRatio, mean))
@@ -2113,10 +2113,10 @@ bySpeciesLm &lt;- addTransform(bySpecies, function(x) {
 })
 # compute lm coefficients for each division and rbind them
 recombine(bySpeciesLm, combRbind)</code></pre>
-<pre><code>      Species     slope intercept
-1:     setosa 0.5422926  4.213168
-2: versicolor 0.8282810  2.407523
-3:  virginica 0.9957386  1.059659</code></pre>
+<pre><code>     Species     slope intercept
+1     setosa 0.5422926  4.213168
+2 versicolor 0.8282810  2.407523
+3  virginica 0.9957386  1.059659</code></pre>
 </div>
 <div id="mapreduce-example" class="section level3">
 <h3>MapReduce example</h3>
@@ -2169,7 +2169,7 @@ irisDiskConn &lt;- localDiskConn(file.path(tempdir(), &quot;irisKV&quot;), autoY
 <pre class="r"><code># print the connection object
 irisDiskConn</code></pre>
 <pre><code>localDiskConn connection
-  loc=/private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpRZ8DJ1/irisKV; nBins=0</code></pre>
+  loc=/private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpbEUDpg/irisKV; nBins=0</code></pre>
 <p><code>irisDiskConn</code> is simply a “kvConnection” object that points to the directory. Meta data containing data attributes is also stored in this directory. If we lose the connection object <code>irisDiskConn</code>, the data still stays on the disk, and we can get our connection back by calling</p>
 <pre class="r"><code>irisDiskConn &lt;- localDiskConn(file.path(tempdir(), &quot;irisKV&quot;))</code></pre>
 <p>Any meta data that was there is also read in. If you would like to connect to a directory but reset all meta data, you can call <code><a target='_blank' href='rd.html#localdiskconn'>localDiskConn()</a></code> with <code>reset = TRUE</code>.</p>
@@ -2241,10 +2241,10 @@ bySpeciesLm &lt;- addTransform(bySpecies, function(x) {
 })
 # compute lm coefficients for each division and rbind them
 recombine(bySpeciesLm, combRbind)</code></pre>
-<pre><code>      Species     slope intercept
-1:     setosa 0.5422926  4.213168
-2: versicolor 0.8282810  2.407523
-3:  virginica 0.9957386  1.059659</code></pre>
+<pre><code>     Species     slope intercept
+1     setosa 0.5422926  4.213168
+2 versicolor 0.8282810  2.407523
+3  virginica 0.9957386  1.059659</code></pre>
 </div>
 <div id="interacting-with-local-disk-ddoddf-objects" class="section level3">
 <h3>Interacting with local disk ddo/ddf objects</h3>
@@ -2570,7 +2570,7 @@ system(paste(&quot;head&quot;, csvFile))</code></pre>
 irisConn &lt;- localDiskConn(file.path(tempdir(), &quot;iris&quot;), autoYes = TRUE)
 # read in iris data
 irisData &lt;- drRead.csv(csvFile, rowsPerBlock = 20, output = irisConn)</code></pre>
-<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpRZ8DJ1/iris.csv 
+<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpbEUDpg/iris.csv 
   Processing chunk  1 
   Processing chunk  2 
   Processing chunk  3 
