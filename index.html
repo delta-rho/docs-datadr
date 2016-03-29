@@ -9,7 +9,7 @@
   
   <title>datadr</title>
 
-    <script src="assets/jquery-1.11.0/jquery.min.js"></script>
+    <script src="assets/jquery-1.11.3/jquery.min.js"></script>
   <link href="assets/bootstrap-3.3.2/css/bootstrap.min.css" rel="stylesheet" />
   <script src="assets/bootstrap-3.3.2/js/bootstrap.min.js"></script>
   <script src="assets/bootstrap-3.3.2/shim/html5shiv.min.js"></script>
@@ -201,13 +201,11 @@
 <p>Before going into some of the details of <code>datadr</code>, let’s first run through some quick examples to get acquainted with some of the functionality of the package.</p>
 <div id="package-installation" class="section level3">
 <h3>Package installation</h3>
-<p>First, we need to install the necessary components, <code>datadr</code> and <code>trelliscope</code>. These are R packages that we install from github.</p>
-<pre class="r"><code>install.packages(&quot;devtools&quot;) # if not already installed
-devtools::install_github(&quot;tesseradata/datadr&quot;)
-devtools::install_github(&quot;tesseradata/trelliscope&quot;)</code></pre>
+<p>First, we need to install the necessary components, <code>datadr</code> and <code>trelliscope</code>. These are R packages that we install from CRAN.</p>
+<pre class="r"><code>install.packages(c(&quot;datadr&quot;, &quot;trelliscope&quot;))</code></pre>
 <p>The example we go through will be a small dataset that we can handle in a local R session, and therefore we only need to have these two packages installed. For other installation options when dealing with larger data sets, see the <a href="http://tessera.io/#quickstart">quickstart</a> on our website.</p>
 <p>We will use as an example a data set consisting of the median list and sold price of homes in the United States, aggregated by county and month from 2008 to early 2014. These data are available in a package called <code>housingData</code>. To install this package:</p>
-<pre class="r"><code>devtools::install_github(&quot;hafen/housingData&quot;)</code></pre>
+<pre class="r"><code>install.packages(&quot;housingData&quot;)</code></pre>
 </div>
 <div id="environment-setup" class="section level3">
 <h3>Environment setup</h3>
@@ -217,20 +215,20 @@ library(datadr)
 library(trelliscope)
 
 head(housing)</code></pre>
-<pre><code>   fips         county state       time nSold medListPriceSqft
-1 06001 Alameda County    CA 2008-10-01    NA         307.9787
-2 06001 Alameda County    CA 2008-11-01    NA         299.1667
-3 06001 Alameda County    CA 2008-11-01    NA               NA
-4 06001 Alameda County    CA 2008-12-01    NA         289.8815
-5 06001 Alameda County    CA 2009-01-01    NA         288.5000
-6 06001 Alameda County    CA 2009-02-01    NA         287.0370
+<pre><code>   fips             county state       time  nSold medListPriceSqft
+1 06037 Los Angeles County    CA 2008-01-31 505900               NA
+2 06037 Los Angeles County    CA 2008-02-29 497100               NA
+3 06037 Los Angeles County    CA 2008-03-31 487300               NA
+4 06037 Los Angeles County    CA 2008-04-30 476400               NA
+5 06037 Los Angeles County    CA 2008-05-31 465900               NA
+6 06037 Los Angeles County    CA 2008-06-30 456000               NA
   medSoldPriceSqft
-1         325.8118
-2               NA
-3         318.1150
-4         305.7878
-5         291.5977
-6               NA</code></pre>
+1         360.1645
+2         353.9788
+3         349.7633
+4         348.5246
+5         343.8849
+6         342.1065</code></pre>
 <p>We see that we have a data frame with the information we discussed, in addition to the number of units sold.</p>
 </div>
 <div id="division-by-county-and-state" class="section level3">
@@ -277,7 +275,8 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
  --------------------  ------------------- </code></pre>
 <p>Since <code>datadr</code> knows that <code>byCounty</code> is a ddf, and because we set <code>update = TRUE</code>, after the division operation global summary statistics were computed for each of the variables.</p>
 <p>Suppose we want a more meaningful global summary, such as computing quantiles. <code>datadr</code> can do this in a division-independent way with <code><a target='_blank' href='rd.html#drquantile'>drQuantile()</a></code>. For example, let’s look at quantiles for the median list price and plot them using <code>xyplot()</code> from the <code>lattice</code> package:</p>
-<pre class="r"><code>priceQ &lt;- drQuantile(byCounty, var = &quot;medListPriceSqft&quot;)
+<pre class="r"><code>library(lattice)
+priceQ &lt;- drQuantile(byCounty, var = &quot;medListPriceSqft&quot;)
 xyplot(q ~ fval, data = priceQ, scales = list(y = list(log = 10)))</code></pre>
 <p><img src="index_files/figure-html/quickstart_quantile-1.png" title="" alt="" width="624" /></p>
 <p>By the way, what does a subset of <code>byCounty</code> look like? <code>byCounty</code> is a list of <em>key-value pairs</em>, which we will learn more about later. Essentially, the collection of subsets can be thought of as a large list, where each list element has a key and a value. To look at the first key-value pair:</p>
@@ -656,9 +655,8 @@ Distributed data object backed by &#39;kvMemory&#39; connection
 
 * Other attributes: getKeys(), splitSizeDistn()</code></pre>
 <p>The <code>splitSizeDistn</code> attribute is now available. We can look at it with the accessor <code>splitSizeDistn()</code>:</p>
-<pre class="r"><code># plot distribution of the size of the key-value pairs
-qplot(y = splitSizeDistn(irisDdo),
-  xlab = &quot;percentile&quot;, ylab = &quot;subset size (kb)&quot;)</code></pre>
+<pre class="r"><code>par(mar = c(4.1, 4.1, 1, 0.2))
+# plot distribution of the size of the key-value pairs</code></pre>
 <p><img src="index_files/figure-html/plot_iris_split_size-1.png" title="" alt="" width="624" /></p>
 <p>Another way to get updated attributes is at the time the ddo is created, by setting <code>update = TRUE</code>:</p>
 <pre class="r"><code># update at the time ddo() is called
@@ -934,9 +932,11 @@ $value
 <p>A final note about <code><a target='_blank' href='rd.html#addtransform'>addTransform()</a></code>: it is possible to add multiple transformations to a distributed data object, in which case they are applied in the order supplied, but only one transform should ever be necessary.</p>
 <p>For example, suppose we want to further modify <code>irisSL</code> to append some text to the keys:</p>
 <pre class="r"><code>irisSL2 &lt;- addTransform(irisSL, function(k, v) kvPair(paste0(k, &quot;_mod&quot;), v))</code></pre>
-<pre><code>*** finding global variables used in &#39;fn&#39;... [none]
-  package dependencies: datadr
-*** testing &#39;fn&#39; on a subset... ok</code></pre>
+<pre><code>*** finding global variables used in &#39;fn&#39;...</code></pre>
+<pre><code> [none]</code></pre>
+<pre><code>  package dependencies: datadr</code></pre>
+<pre><code>*** testing &#39;fn&#39; on a subset...</code></pre>
+<pre><code> ok</code></pre>
 <pre class="r"><code>irisSL2[[1]]</code></pre>
 <pre><code>$key
 [1] &quot;setosa_mod&quot;
@@ -1145,10 +1145,10 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
 
  attribute      | value
 ----------------+-----------------------------------------------------------
- names          | Sepal.Length(num), Sepal.Width(num), and 2 more
+ names          | Sepal.Length(num), Sepal.Width(num), and 3 more
  nrow           | 150
- size (stored)  | 23.52 KB
- size (object)  | 23.52 KB
+ size (stored)  | 29.19 KB
+ size (object)  | 29.19 KB
  # subsets      | 15
 
 * Other attributes: getKeys(), splitSizeDistn(), splitRowDistn(), summary()
@@ -2169,7 +2169,7 @@ irisDiskConn &lt;- localDiskConn(file.path(tempdir(), &quot;irisKV&quot;), autoY
 <pre class="r"><code># print the connection object
 irisDiskConn</code></pre>
 <pre><code>localDiskConn connection
-  loc=/private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpbEUDpg/irisKV; nBins=0</code></pre>
+  loc=/private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpVe7Twt/irisKV; nBins=0</code></pre>
 <p><code>irisDiskConn</code> is simply a “kvConnection” object that points to the directory. Meta data containing data attributes is also stored in this directory. If we lose the connection object <code>irisDiskConn</code>, the data still stays on the disk, and we can get our connection back by calling</p>
 <pre class="r"><code>irisDiskConn &lt;- localDiskConn(file.path(tempdir(), &quot;irisKV&quot;))</code></pre>
 <p>Any meta data that was there is also read in. If you would like to connect to a directory but reset all meta data, you can call <code><a target='_blank' href='rd.html#localdiskconn'>localDiskConn()</a></code> with <code>reset = TRUE</code>.</p>
@@ -2570,7 +2570,7 @@ system(paste(&quot;head&quot;, csvFile))</code></pre>
 irisConn &lt;- localDiskConn(file.path(tempdir(), &quot;iris&quot;), autoYes = TRUE)
 # read in iris data
 irisData &lt;- drRead.csv(csvFile, rowsPerBlock = 20, output = irisConn)</code></pre>
-<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpbEUDpg/iris.csv 
+<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpVe7Twt/iris.csv 
   Processing chunk  1 
   Processing chunk  2 
   Processing chunk  3 
@@ -2714,7 +2714,7 @@ $value
   <div id="footer">
     <div class="container">
       <div class="col-md-6">
-                <p>&copy; Ryan Hafen, 2015</p>
+                <p>&copy; Ryan Hafen, 2016</p>
               </div>
       <div class="col-md-6">
         <p class="pull-right">created with <a href="https://github.com/hafen/packagedocs">packagedocs</a></p>

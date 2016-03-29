@@ -120,6 +120,7 @@ irisDdo
 The `splitSizeDistn` attribute is now available.  We can look at it with the accessor `splitSizeDistn()`:
 
 ```{r plot_iris_split_size, fig.height=3, echo=2:3}
+library(ggplot2)
 par(mar = c(4.1, 4.1, 1, 0.2))
 # plot distribution of the size of the key-value pairs
 qplot(y = splitSizeDistn(irisDdo),

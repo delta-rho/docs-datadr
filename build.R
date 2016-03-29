@@ -8,7 +8,7 @@ library(housingData)
 knitr::opts_knit$set(root.dir = normalizePath("."))
 
 packagedocs::render_docs(
-  code_path = "~/Documents/Code/Tessera/hafen/datadr",
+  code_path = "~/Documents/Code/Tessera/datadr",
   docs_path = ".",             # location of docs directory
   package_name = "datadr",     # name of the package
   main_toc_collapse = TRUE,    # use collapsing toc on main page

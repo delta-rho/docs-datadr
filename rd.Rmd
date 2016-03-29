@@ -19,7 +19,7 @@ brand: |-
 <h1>Divide and Recombine for Large, Complex Data</h1>
 
 <p><strong>Authors:</strong> <a href="mailto:rhafen@gmail.com">Ryan Hafen</a> [aut, cre],Landon Sego [ctb]</p>
-<p><strong>Version:</strong> 0.8.0</p>
+<p><strong>Version:</strong> 0.8.5</p>
 <p><strong>License:</strong> BSD_3_clause + file LICENSE</p>
 
 <h4>Description</h4>
@@ -34,20 +34,20 @@ Integrated Programming Environment (RHIPE).</p>
 
 <h4>Imports</h4>
 <p>
-data.table,
+data.table (>= 1.9.6),
 digest,
 codetools,
 hexbin,
 parallel,
 magrittr,
-dplyr</p>
+dplyr,
+methods</p>
 
 <h4>Suggests</h4>
 <p>
 testthat (>= 0.11.0),
 roxygen2 (>= 5.0.1),
-Rhipe,
-SparkR</p>
+Rhipe</p>
 
 <h4>Enhances</h4>
 <p>(none)</p>
@@ -141,6 +141,8 @@ a list of objects of class "kvPair"
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code> kvPair(1, letters)</code></pre>
 
 
 
@@ -161,6 +163,8 @@ a list of objects of class "kvPair"
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code> kvPair(1, letters)</code></pre>
 
 
 
@@ -225,6 +229,10 @@ kvApply(kv, function(x) kvPair("new_key", x))</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>kv <- kvPairs(kvPair(1, letters), kvPair(2, rnorm(100)))
+kvddo <- ddo(kv)
+kvddo</code></pre>
 
 
 
@@ -255,6 +263,29 @@ kvApply(kv, function(x) kvPair("new_key", x))</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code># in-memory ddf
+d <- ddf(iris)
+d
+
+# local disk ddf
+conn <- localDiskConn(tempfile(), autoYes = TRUE)
+addData(conn, list(list("1", iris[1:10,])))
+addData(conn, list(list("2", iris[11:110,])))
+addData(conn, list(list("3", iris[111:150,])))
+dl <- ddf(conn)
+dl
+
+# hdfs ddf (requires RHIPE / Hadoop)
+
+  # connect to empty HDFS directory
+  conn <- hdfsConn("/tmp/irisSplit")
+  # add some data
+  addData(conn, list(list("1", iris[1:10,])))
+  addData(conn, list(list("2", iris[11:110,])))
+  addData(conn, list(list("3", iris[111:150,])))
+  # represent it as a distributed data frame
+  hdd <- ddf(conn)</code></pre>
 
 
 
@@ -293,6 +324,15 @@ an object of class ddo or ddf
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species")
+# some attributes are missing:
+d
+summary(d)
+d <- updateAttributes(d)
+# now all attributes are available:
+d
+summary(d)</code></pre>
 
 <h4>See also</h4>
 
@@ -308,7 +348,7 @@ Ryan Hafen
 
 ## ddf-accessors
 
-<h3>Accessor methods for 'ddo' and 'ddf' objects</h3>
+<h3>Accessor methods for 'ddf' objects</h3>
 
 
 <h4>Usage</h4>
@@ -347,6 +387,14 @@ namesddf(x)</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species", update = TRUE)
+nrow(d)
+ncol(d)
+length(d)
+names(d)
+summary(d)
+getKeys(d)</code></pre>
 
 
 
@@ -378,6 +426,14 @@ lengthddo(x)</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species", update = TRUE)
+nrow(d)
+ncol(d)
+length(d)
+names(d)
+summary(d)
+getKeys(d)</code></pre>
 
 
 
@@ -385,6 +441,7 @@ lengthddo(x)</code></pre>
 
 <h3>Managing attributes of 'ddo' or 'ddf' objects</h3>
 
+<p class="rd-p">These are called internally in various datadr functions.  They are not meant for use outside of there, but are exported for convenience, and can be useful for better understanding ddo/ddf objects.</p>
 
 <h4>Usage</h4>
 <pre class="r"><code>setAttributes(obj, attrs)
@@ -420,6 +477,9 @@ hasAttributesddf(obj, attrNames)</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species")
+getAttribute(d, "keys")</code></pre>
 
 
 
@@ -441,6 +501,10 @@ hasAttributesddf(obj, attrNames)</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>kv <- kvPairs(kvPair(1, letters), kvPair(2, rnorm(100)))
+kvddo <- ddo(kv)
+kvddo</code></pre>
 
 <h4>Author</h4>
 
@@ -637,6 +701,28 @@ Ryan Hafen
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code># create a 2-node cluster that can be used to process in parallel
+cl <- parallel::makeCluster(2)
+# create a local disk control object that specifies to use this cluster
+# these operations run in parallel
+control <- localDiskControl(cluster = cl)
+# note that setting options(defaultLocalDiskControl = control)
+# will cause this to be used by default in all local disk operations
+
+# convert in-memory ddf to local-disk ddf
+ldPath <- file.path(tempdir(), "by_species")
+ldConn <- localDiskConn(ldPath, autoYes = TRUE)
+bySpeciesLD <- convert(divide(iris, by = "Species"), ldConn)
+
+# update attributes using parallel cluster
+updateAttributes(bySpeciesLD, control = control)
+
+# remove temporary directories
+unlink(ldPath, recursive = TRUE)
+
+# shut down the cluster
+parallel::stopCluster(cl)</code></pre>
 
 
 
@@ -717,82 +803,20 @@ Ryan Hafen
 </dl>
 
 
-
-
-
-## sparkControl
-
-<h3>Specify Control Parameters for Spark Job</h3>
-
-<p class="rd-p">Specify control parameters for a Spark job.  See <code>rhwatch</code> for details about each of the parameters.</p>
-
-<h4>Usage</h4>
-<pre class="r"><code>sparkControl()</code></pre>
-
-
-
-
-
-## sparkDataConn
-
-<h3>Connect to Spark Data Source</h3>
-
-<p class="rd-p">Connect to a Spark data source, potentially on HDFS</p>
-
-<h4>Usage</h4>
-<pre class="r"><code>sparkDataConn(loc, type = "object", hdfs = FALSE, init = list(),
-  autoYes = FALSE, reset = FALSE, verbose = TRUE)</code></pre>
-
-<h4>Arguments</h4>
-<dl class="rd-dl">
-  <dt>loc</dt>
-  <dd class="rd-dd">location on the file system (typically HDFS) for the data source</dd>
-  <dt>type</dt>
-  <dd class="rd-dd">is it a "text" file or "object" (default) file?</dd>
-  <dt>hdfs</dt>
-  <dd class="rd-dd">is the file on HDFS?</dd>
-  <dt>init</dt>
-  <dd class="rd-dd">if a SparkContext has not been initialized with <code>sparkR.init</code>, a named list of arguments to be passed to <code>sparkR.init</code> to initialize a SparkContext</dd>
-  <dt>autoYes</dt>
-  <dd class="rd-dd">automatically answer "yes" to questions about creating a path if missing</dd>
-  <dt>reset</dt>
-  <dd class="rd-dd">should existing metadata for this object be overwritten?</dd>
-  <dt>verbose</dt>
-  <dd class="rd-dd">logical - print messages about what is being done</dd>
-</dl>
-
-  <h4>Details</h4>
-
-  <p class="rd-p">This simply creates a "connection" to a directory (which need not have data in it).  To actually do things with this data, see <code><a href=#ddo>ddo</a></code>, etc.</p>
-
-
-  <h4>Value</h4>
-
-  <p class="rd-p"><dl>
-a "kvConnection" object of class "sparkDataConn"
-</dl></p>
-
-
-
 <h4>Examples</h4>
-<pre class="r"><code> # connect to empty HDFS directory
- conn <- sparkDataConn("/test/irisSplit")
- # add some data
- addData(conn, list(list("1", iris[1:10,])))
- addData(conn, list(list("2", iris[11:110,])))
- addData(conn, list(list("3", iris[111:150,])))
- # represent it as a distributed data frame
- hdd <- ddf(conn)</code></pre>
+<pre class="r"><code># input data on HDFS
+d <- ddf(hdfsConn("/path/to/big/data/on/hdfs"))
 
-<h4>See also</h4>
+# set RHIPE / Hadoop parameters
+# buffer sizes control how many k/v pairs are sent to map / reduce tasks at a time
+# mapred.reduce.tasks is a Hadoop config parameter that controls # of reduce tasks
+rhctl <- rhipeControl(mapred = list(
+  rhipe_map_buff_size = 10000,
+  mapred.reduce.tasks = 72,
+  rhipe_reduce_buff_size = 1)
 
-<code><a href=#adddata>addData</a></code>, <code><a href=#ddo>ddo</a></code>, <code><a href=#ddf>ddf</a></code>, <code><a href=#sparkdataconn>sparkDataConn</a></code>
-
-
-<h4>Author</h4>
-
-Ryan Hafen
-
+# divide input data using these control parameters
+divide(d, by = "var", output = hdfsConn("/path/to/output"), control = rhctl)</code></pre>
 
 # Data I/O
 
@@ -823,6 +847,15 @@ Ryan Hafen
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code>  # connect to empty HDFS directory
+  conn <- hdfsConn("/test/irisSplit")
+  # add some data
+  addData(conn, list(list("1", iris[1:10,])))
+  addData(conn, list(list("2", iris[11:110,])))
+  addData(conn, list(list("3", iris[111:150,])))
+  # represent it as a distributed data frame
+  hdd <- ddf(conn)</code></pre>
 
 <h4>See also</h4>
 
@@ -859,6 +892,22 @@ Ryan Hafen
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code># connect to empty localDisk directory
+conn <- localDiskConn(file.path(tempdir(), "irisSplit"), autoYes = TRUE)
+# add some data
+addData(conn, list(list("1", iris[1:10,])))
+addData(conn, list(list("2", iris[11:90,])))
+addData(conn, list(list("3", iris[91:110,])))
+addData(conn, list(list("4", iris[111:150,])))
+# represent it as a distributed data frame
+irisDdf <- ddf(conn, update = TRUE)
+irisDdf
+# remove data for keys "1" and "2"
+removeData(conn, list("1", "2"))
+# look at result with updated attributes (reset = TRUE removes previous attrs)
+irisDdf <- ddf(conn, reset = TRUE, update = TRUE)
+irisDdf</code></pre>
 
 <h4>See also</h4>
 
@@ -998,6 +1047,14 @@ Ryan Hafen
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>res <- readHDFStextFile(
+  input = Rhipe::rhfmt("/path/to/input/text", type = "text"),
+  output = hdfsConn("/path/to/output"),
+  fn = function(x) {
+    read.csv(textConnection(paste(x, collapse = "\n")), header = FALSE)
+  }
+)</code></pre>
 
 
 
@@ -1074,6 +1131,11 @@ a[[1]]</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species")
+# convert in-memory ddf to one stored on disk
+dl <- convert(d, localDiskConn(tempfile(), autoYes = TRUE))
+dl</code></pre>
 
 
 
@@ -1106,6 +1168,9 @@ a[[1]]</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species")
+as.data.frame(d)</code></pre>
 
 
 
@@ -1126,6 +1191,9 @@ a[[1]]</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species")
+as.list(d)</code></pre>
 
 
 
@@ -1262,6 +1330,17 @@ a "hexbin" object
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code># create dummy data and divide it
+dat <- data.frame(
+  xx = rnorm(1000),
+  yy = rnorm(1000),
+  by = sample(letters, 1000, replace = TRUE))
+d <- divide(dat, by = "by", update = TRUE)
+# compute hexbins on divided object
+dhex <- drHexbin(d, xVar = "xx", yVar = "yy")
+# dhex is equivalent to running on undivided data:
+hexbin(dat$xx, dat$yy)</code></pre>
 
 <h4>See also</h4>
 
@@ -1418,7 +1497,7 @@ an object of class "ddf" if the resulting subsets are data frames.  Otherwise, a
   <h4>References</h4>
 
   <p class="rd-p"><ul>
-<li> <a href = http://www.datadr.org>http://www.datadr.org</a>
+<li> <a href = http://tessera.io>http://tessera.io</a>
  </li>
 <li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
@@ -1428,6 +1507,35 @@ an object of class "ddf" if the resulting subsets are data frames.  Otherwise, a
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code># divide iris data by Species by passing in a data frame
+bySpecies <- divide(iris, by = "Species")
+bySpecies
+
+# divide iris data into random partitioning of ~30 rows per subset
+irisRR <- divide(iris, by = rrDiv(30))
+irisRR
+
+# any ddf can be passed into divide:
+irisRR2 <- divide(bySpecies, by = rrDiv(30))
+irisRR2
+bySpecies2 <- divide(irisRR2, by = "Species")
+bySpecies2
+
+# splitting on multiple columns
+byEdSex <- divide(adult, by = c("education", "sex"))
+byEdSex
+byEdSex[[1]]
+
+# splitting on a numeric variable
+bySL <- ddf(iris) %>%
+  addTransform(function(x) {
+    x$slCut <- cut(x$Sepal.Length, 10)
+    x
+  }) %>%
+  divide(by = "slCut")
+bySL
+bySL[[1]]</code></pre>
 
 <h4>See also</h4>
 
@@ -1471,7 +1579,7 @@ a list to be used for the "by" argument to <code><a href=#divide>divide</a></cod
   <h4>References</h4>
 
   <p class="rd-p"><ul>
-<li> <a href = http://www.datadr.org>http://www.datadr.org</a>
+<li> <a href = http://tessera.io>http://tessera.io</a>
  </li>
 <li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
@@ -1481,10 +1589,14 @@ a list to be used for the "by" argument to <code><a href=#divide>divide</a></cod
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species")
+# equivalent:
+d <- divide(iris, by = condDiv("Species"))</code></pre>
 
 <h4>See also</h4>
 
-<code><a href=#divide>divide</a></code>, <code><a href=#getsplitvars>getSplitVars</a></code>, <code><a href=#getsplitvar>getSplitVar</a></code>
+<code><a href=#divide>divide</a></code>, <code><a href=#splitvars>getSplitVars</a></code>, <code><a href=#splitvars>getSplitVar</a></code>
 
 
 <h4>Author</h4>
@@ -1526,7 +1638,7 @@ a list to be used for the "by" argument to <code><a href=#divide>divide</a></cod
   <h4>References</h4>
 
   <p class="rd-p"><ul>
-<li> <a href = http://www.datadr.org>http://www.datadr.org</a>
+<li> <a href = http://tessera.io>http://tessera.io</a>
  </li>
 <li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
@@ -1536,6 +1648,12 @@ a list to be used for the "by" argument to <code><a href=#divide>divide</a></cod
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code># divide iris data into random subsets with ~20 records per subset
+irisRR <- divide(iris, by = rrDiv(20), update = TRUE)
+irisRR
+# look at the actual distribution of number of rows per subset
+plot(splitRowDistn(irisRR))</code></pre>
 
 <h4>See also</h4>
 
@@ -1602,44 +1720,33 @@ The distributed data object provided by <code>obj</code>, with the tranformation
 # kvMemory (in memory) connection
 bySpecies <- divide(iris, by = "Species")
 bySpecies
-
 # Note a tranformation is not present in the attributes
 names(attributes(bySpecies))
-
 ## A transform that operates only on values of the key-value pairs
 ##----------------------------------------------------------------
-
 # Create a function that will calculate the mean of each variable in
 # in a subset. The calls to 'as.data.frame()' and 't()' convert the
 # vector output of 'apply()' into a data.frame with a single row
 colMean <- function(x) as.data.frame(t(apply(x, 2, mean)))
-
 # Test on a subset
 colMean(bySpecies[[1]][[2]])
-
 # Add a tranformation that will calculate the mean of each variable
 bySpeciesTransformed <- addTransform(bySpecies, colMean)
-
 # Note how 'before transformation' appears to describe the values of
 # several of the attributes
 bySpeciesTransformed
-
 # Note the addition of the transformation to the attributes
 names(attributes(bySpeciesTransformed))
-
 # We can see the result of the transformation by looking at one of
 # the subsets:
 bySpeciesTransformed[[1]]
-
 # The transformation is automatically applied when calling any data
 # operation.  For example, if can call 'recombine()' with 'combRbind'
 # we will get a data frame of the column means for each subset:
 varMeans <- recombine(bySpeciesTransformed, combine = combRbind)
 varMeans
-
 ## A transform that operates on both keys and values
 ##---------------------------------------------------------
-
 # We can also create a transformation that uses both the keys and values
 # It will select the first row of the value, and append '-firstRow' to
 # the key
@@ -1648,7 +1755,6 @@ aTransform <- function(key, val) {
   newVal <- val[1,]
   kvPair(newKey, newVal)
 }
-
 # Apply the transformation
 recombine(addTransform(bySpecies, aTransform))</code></pre>
 
@@ -1656,7 +1762,7 @@ recombine(addTransform(bySpecies, aTransform))</code></pre>
 
 ## applyTransform
 
-<h3>Applies the transformation function(s)</h3>
+<h3>Apply transformation function(s)</h3>
 
 <p class="rd-p">This is called internally in the map phase of datadr MapReduce jobs.  It is not meant for use outside of there, but is exported for convenience.</p>
 
@@ -1674,6 +1780,48 @@ recombine(addTransform(bySpecies, aTransform))</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code># Create a distributed data frame using the iris data set, backed by the
+# kvMemory (in memory) connection
+bySpecies <- divide(iris, by = "Species")
+bySpecies
+# Note a tranformation is not present in the attributes
+names(attributes(bySpecies))
+## A transform that operates only on values of the key-value pairs
+##----------------------------------------------------------------
+# Create a function that will calculate the mean of each variable in
+# in a subset. The calls to 'as.data.frame()' and 't()' convert the
+# vector output of 'apply()' into a data.frame with a single row
+colMean <- function(x) as.data.frame(t(apply(x, 2, mean)))
+# Test on a subset
+colMean(bySpecies[[1]][[2]])
+# Add a tranformation that will calculate the mean of each variable
+bySpeciesTransformed <- addTransform(bySpecies, colMean)
+# Note how 'before transformation' appears to describe the values of
+# several of the attributes
+bySpeciesTransformed
+# Note the addition of the transformation to the attributes
+names(attributes(bySpeciesTransformed))
+# We can see the result of the transformation by looking at one of
+# the subsets:
+bySpeciesTransformed[[1]]
+# The transformation is automatically applied when calling any data
+# operation.  For example, if can call 'recombine()' with 'combRbind'
+# we will get a data frame of the column means for each subset:
+varMeans <- recombine(bySpeciesTransformed, combine = combRbind)
+varMeans
+## A transform that operates on both keys and values
+##---------------------------------------------------------
+# We can also create a transformation that uses both the keys and values
+# It will select the first row of the value, and append '-firstRow' to
+# the key
+aTransform <- function(key, val) {
+  newKey <- paste(key, "firstRow", sep = "-")
+  newVal <- val[1,]
+  kvPair(newKey, newVal)
+}
+# Apply the transformation
+recombine(addTransform(bySpecies, aTransform))</code></pre>
 
 
 
@@ -1696,6 +1844,48 @@ Given an environment and collection of transformations, it populates the environ
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code># Create a distributed data frame using the iris data set, backed by the
+# kvMemory (in memory) connection
+bySpecies <- divide(iris, by = "Species")
+bySpecies
+# Note a tranformation is not present in the attributes
+names(attributes(bySpecies))
+## A transform that operates only on values of the key-value pairs
+##----------------------------------------------------------------
+# Create a function that will calculate the mean of each variable in
+# in a subset. The calls to 'as.data.frame()' and 't()' convert the
+# vector output of 'apply()' into a data.frame with a single row
+colMean <- function(x) as.data.frame(t(apply(x, 2, mean)))
+# Test on a subset
+colMean(bySpecies[[1]][[2]])
+# Add a tranformation that will calculate the mean of each variable
+bySpeciesTransformed <- addTransform(bySpecies, colMean)
+# Note how 'before transformation' appears to describe the values of
+# several of the attributes
+bySpeciesTransformed
+# Note the addition of the transformation to the attributes
+names(attributes(bySpeciesTransformed))
+# We can see the result of the transformation by looking at one of
+# the subsets:
+bySpeciesTransformed[[1]]
+# The transformation is automatically applied when calling any data
+# operation.  For example, if can call 'recombine()' with 'combRbind'
+# we will get a data frame of the column means for each subset:
+varMeans <- recombine(bySpeciesTransformed, combine = combRbind)
+varMeans
+## A transform that operates on both keys and values
+##---------------------------------------------------------
+# We can also create a transformation that uses both the keys and values
+# It will select the first row of the value, and append '-firstRow' to
+# the key
+aTransform <- function(key, val) {
+  newKey <- paste(key, "firstRow", sep = "-")
+  newVal <- val[1,]
+  kvPair(newKey, newVal)
+}
+# Apply the transformation
+recombine(addTransform(bySpecies, aTransform))</code></pre>
 
 
 
@@ -1814,7 +2004,7 @@ Depends on <code>combine</code>: this could be a distributed data object, a data
   <h4>References</h4>
 
   <p class="rd-p"><ul>
-<li> <a href = http://www.datadr.org>http://www.datadr.org</a>
+<li> <a href = http://tessera.io>http://tessera.io</a>
  </li>
 <li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
@@ -1825,70 +2015,58 @@ Depends on <code>combine</code>: this could be a distributed data object, a data
 
 
 <h4>Examples</h4>
-<pre class="r"><code>## In memory example
+<pre class="r"><code>## in-memory example
 ##---------------------------------------------------------
 
-# Begin with an in-memory ddf (backed by kvMemory)
+# begin with an in-memory ddf (backed by kvMemory)
 bySpecies <- divide(iris, by = "Species")
 
-# Create a function to calculate the mean for each variable
-# 'as.data.frame()' and 't()' convert the vector output of 'apply()'
-# into a data.frame with a single row
-colMean <- function(x) as.data.frame(t(apply(x, 2, mean)))
+# create a function to calculate the mean for each variable
+colMean <- function(x) data.frame(lapply(x, mean))
 
-# Add the transform
+# apply the transformation
 bySpeciesTransformed <- addTransform(bySpecies, colMean)
 
-# Recombination with no 'combine' argument and no argument to output
+# recombination with no 'combine' argument and no argument to output
 # produces the key-value list produced by 'combCollect()'
 recombine(bySpeciesTransformed)
 
-# But we can also preserve the distributed data frame, like this:
+# but we can also preserve the distributed data frame, like this:
 recombine(bySpeciesTransformed, combine = combDdf)
 
-# Or we could recombine using 'combRbind()' and produce a data frame:
+# or we can recombine using 'combRbind()' and produce a data frame:
 recombine(bySpeciesTransformed, combine = combRbind)
 
-## Local disk connection example with parallelization
+## local disk connection example with parallelization
 ##---------------------------------------------------------
 
-# Create a 2-node cluster that can be used to process in parallel
+# create a 2-node cluster that can be used to process in parallel
 cl <- parallel::makeCluster(2)
 
-# Create the control object we'll pass into 'divide()' and 'recombine()' to have
-# these operations run in parallel
+# create the control object we'll pass into local disk datadr operations
 control <- localDiskControl(cluster = cl)
+# note that setting options(defaultLocalDiskControl = control)
+# will cause this to be used by default in all local disk operations
 
-# Create a path for a temporary directory
-tmpDir1 <- file.path(tempdir(), "divide_example1")
+# create local disk connection to hold bySpecies data
+ldPath <- file.path(tempdir(), "by_species")
+ldConn <- localDiskConn(ldPath, autoYes = TRUE)
 
-# Create the local disk connection where data will be stored
-loc1 <- localDiskConn(tmpDir1, autoYes = TRUE)
+# convert in-memory bySpecies to local-disk ddf
+bySpeciesLD <- convert(bySpecies, ldConn)
 
-# Now divide the data, writing data to the local disk connection
-bySpecies <- divide(iris, by = "Species", output = loc1, update = TRUE, control = control)
-bySpecies
+# apply the transformation
+bySpeciesTransformed <- addTransform(bySpeciesLD, colMean)
 
-# Apply the transformation
-bySpeciesTransformed <- addTransform(bySpecies, colMean)
-
-# Now create another location where we can write the output of the recombination
-tmpDir2 <- file.path(tempdir(), "divide_example2")
-loc2 <- localDiskConn(tmpDir2, autoYes = TRUE)
-
-# Recombine the data using the transformation
+# recombine the data using the transformation
 bySpeciesMean <- recombine(bySpeciesTransformed,
-  combine = combDdf, output = loc2, control = control)
+  combine = combRbind, control = control)
 bySpeciesMean
-bySpeciesMean[[1]]
 
-# Convert it to a data.frame to see the results
-as.data.frame(bySpeciesMean)
+# remove temporary directories
+unlink(ldPath, recursive = TRUE)
 
-# Remove temporary directories
-unlink(c(tmpDir1, tmpDir2), recursive = TRUE)
-
-# Shut down the cluster
+# shut down the cluster
 parallel::stopCluster(cl)</code></pre>
 
 <h4>See also</h4>
@@ -1937,6 +2115,26 @@ Ryan Hafen
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code># BLB is meant to run on random replicate divisions
+rrAdult <- divide(adult, by = rrDiv(1000), update = TRUE)
+
+adultBlb <- rrAdult %>% addTransform(function(x) {
+  drBLB(x,
+    statistic = function(x, weights)
+      coef(glm(incomebin ~ educationnum + hoursperweek + sex,
+        data = x, weights = weights, family = binomial())),
+    metric = function(x)
+      quantile(x, c(0.05, 0.95)),
+    R = 100,
+    n = nrow(rrAdult)
+  )
+})
+
+# compute the mean of the resulting CI limits
+# (this will take a little bit of time because of resampling)
+coefs <- recombine(adultBlb, combMean)
+matrix(coefs, ncol = 2, byrow = TRUE)</code></pre>
 
 <h4>See also</h4>
 
@@ -2687,6 +2885,9 @@ data frame
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species")
+drSubset(d, Sepal.Length < 5)</code></pre>
 
 <h4>Author</h4>
 
@@ -2740,6 +2941,34 @@ Ryan Hafen
 
 
 
+<h4>Examples</h4>
+<pre class="r"><code># compute min and max Sepal Length by species for iris data
+# using a random partitioning of it as input
+d <- divide(iris, by = rrDiv(20))
+
+mapExp <- expression({
+  lapply(map.values, function(r) {
+    by(r, r$Species, function(x) {
+      collect(
+        as.character(x$Species[1]),
+        range(x$Sepal.Length, na.rm = TRUE)
+      )
+    })
+  })
+})
+
+reduceExp <- expression(
+  pre = {
+    rng <- c(Inf, -Inf)
+  }, reduce = {
+    rx <- unlist(reduce.values)
+    rng <- c(min(rng[1], rx, na.rm = TRUE), max(rng[2], rx, na.rm = TRUE))
+  }, post = {
+    collect(reduce.key, rng)
+})
+
+res <- mrExec(d, map = mapExp, reduce = reduceExp)
+as.list(res)</code></pre>
 
 <h4>Author</h4>
 
@@ -2766,10 +2995,16 @@ Ryan Hafen
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species")
+# the column "Species" is no longer explicitly in the data
+d[[1]]$value
+# but it is preserved and can be added back in with flatten()
+flatten(d[[1]]$value)</code></pre>
 
 <h4>See also</h4>
 
-<code><a href=#getsplitvars>getSplitVars</a></code>, <code><a href=#getbsvs>getBsvs</a></code>
+<code><a href=#splitvars>getSplitVars</a></code>, <code><a href=#bsv>getBsvs</a></code>
 
 
 
@@ -2778,10 +3013,15 @@ Ryan Hafen
 
 <h3>Construct Between Subset Variable (BSV)</h3>
 
-<p class="rd-p">Construct between subset variable (BSV)</p>
+<p class="rd-p">Construct between subset variable (BSV)
+For a given key-value pair, get a BSV variable value by name (if present)</p>
 
 <h4>Usage</h4>
-<pre class="r"><code>bsv(val = NULL, desc = "")</code></pre>
+<pre class="r"><code>bsv(val = NULL, desc = "")
+
+getBsv(x, name)
+
+getBsvs(x)</code></pre>
 
 <h4>Arguments</h4>
 <dl class="rd-dl">
@@ -2789,6 +3029,15 @@ Ryan Hafen
   <dd class="rd-dd">a scalar character, numeric, or date</dd>
   <dt>desc</dt>
   <dd class="rd-dd">a character string describing the BSV</dd>
+  <dt>x</dt>
+  <dd class="rd-dd">a key-value pair or a value</dd>
+  <dt>name</dt>
+  <dd class="rd-dd">the name of the BSV to get
+d <- divide(iris, by = "Species",
+  bsvFn = function(x)
+    list(msl = bsv(mean(x$Sepal.Length))))
+getBsvs(d[[1]]$value)
+getBsv(d[[1]]$value, "msl")</dd>
 </dl>
 
   <h4>Details</h4>
@@ -2816,7 +3065,7 @@ getBsvs(bySpecies[[1]])</code></pre>
 
 <h4>See also</h4>
 
-<code><a href=#divide>divide</a></code>, <code><a href=#getbsvs>getBsvs</a></code>, <code><a href=#ddo-ddf-accessors>bsvInfo</a></code>
+<code><a href=#divide>divide</a></code>, <code><a href=#bsv>getBsvs</a></code>, <code><a href=#ddo-ddf-accessors>bsvInfo</a></code>
 
 
 <h4>Author</h4>
@@ -2908,6 +3157,21 @@ addSplitAttrs(curSplit, bsvFn, by, postTransFn = NULL)</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>  conn <- hdfsConn("/test/irisSplit")
+  # add some data
+  addData(conn, list(list("1", iris[1:10,])))
+  addData(conn, list(list("2", iris[11:110,])))
+  addData(conn, list(list("3", iris[111:150,])))
+  # represent it as a distributed data frame
+  hdd <- ddf(conn)
+  # try to extract values by key (this will result in an error)
+  # (HDFS can only lookup key-value pairs by key if data is in a mapfile)
+  hdd[["3"]]
+  # convert hdd into a mapfile
+  hdd <- makeExtractable(hdd)
+  # try again
+  hdd[["3"]]</code></pre>
 
 
 
@@ -2951,6 +3215,9 @@ moments2statistics(m)</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code>d <- divide(iris, by = "Species", update = TRUE)
+summary(d)</code></pre>
 
 
 
@@ -2958,7 +3225,7 @@ moments2statistics(m)</code></pre>
 
 <h3>Get names of the conditioning variable cuts</h3>
 
-<p class="rd-p">Used internally for exported for certain reasons.  Do not use explicitly.</p>
+<p class="rd-p">This is used internally for conditioning variable division.  It does not have much use outside of there, but is exported for convenience.</p>
 
 <h4>Usage</h4>
 <pre class="r"><code>getCondCuts(df, splitVars)</code></pre>
@@ -2972,17 +3239,17 @@ moments2statistics(m)</code></pre>
 </dl>
 
 
+<h4>Examples</h4>
+<pre class="r"><code># see how key names are obtained
+getCondCuts(iris, "Species")</code></pre>
 
 
 
 ## getSplitVar
 
-<h3>Extract "Split" Variable</h3>
+<h3>Extract "Split" Variable(s)</h3>
 
 <p class="rd-p">For a given key-value pair or value, get a split variable value by name, if present (split variables are variables that define how the data was divided).</p>
-
-<h4>Usage</h4>
-<pre class="r"><code>getSplitVar(x, name)</code></pre>
 
 <h4>Arguments</h4>
 <dl class="rd-dl">
@@ -2998,17 +3265,16 @@ moments2statistics(m)</code></pre>
 
 ## getSplitVars
 
-<h3>Extract "Split" Variables</h3>
+<h3>Extract "Split" Variable(s)</h3>
 
-<p class="rd-p">For a given k/v pair or value, exract all split variables (split variables are variables that define how the data was divided).</p>
-
-<h4>Usage</h4>
-<pre class="r"><code>getSplitVars(x)</code></pre>
+<p class="rd-p">For a given key-value pair or value, get a split variable value by name, if present (split variables are variables that define how the data was divided).</p>
 
 <h4>Arguments</h4>
 <dl class="rd-dl">
   <dt>x</dt>
   <dd class="rd-dd">a key-value pair or a value</dd>
+  <dt>name</dt>
+  <dd class="rd-dd">the name of the split variable to get</dd>
 </dl>
 
 
@@ -3017,40 +3283,86 @@ moments2statistics(m)</code></pre>
 
 ## getBsv
 
-<h3>Get Between Subset Variable</h3>
+<h3>Construct Between Subset Variable (BSV)</h3>
 
-<p class="rd-p">For a given key-value pair, get a BSV variable value by name (if present)</p>
-
-<h4>Usage</h4>
-<pre class="r"><code>getBsv(x, name)</code></pre>
+<p class="rd-p">Construct between subset variable (BSV)
+For a given key-value pair, get a BSV variable value by name (if present)</p>
 
 <h4>Arguments</h4>
 <dl class="rd-dl">
+  <dt>val</dt>
+  <dd class="rd-dd">a scalar character, numeric, or date</dd>
+  <dt>desc</dt>
+  <dd class="rd-dd">a character string describing the BSV</dd>
   <dt>x</dt>
   <dd class="rd-dd">a key-value pair or a value</dd>
   <dt>name</dt>
-  <dd class="rd-dd">the name of the BSV to get</dd>
+  <dd class="rd-dd">the name of the BSV to get
+d <- divide(iris, by = "Species",
+  bsvFn = function(x)
+    list(msl = bsv(mean(x$Sepal.Length))))
+getBsvs(d[[1]]$value)
+getBsv(d[[1]]$value, "msl")</dd>
 </dl>
 
+  <h4>Details</h4>
+
+  <p class="rd-p">Should be called inside the <code>bsvFn</code> argument to <code>divide</code> used for constructing a BSV list for each subset of a division.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#bsv>getBsvs</a></code>, <code><a href=#ddo-ddf-accessors>bsvInfo</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
 
 
 
 
 ## getBsvs
 
-<h3>Get Between Subset Variables</h3>
+<h3>Construct Between Subset Variable (BSV)</h3>
 
-<p class="rd-p">For a given key-value pair, exract all BSVs</p>
-
-<h4>Usage</h4>
-<pre class="r"><code>getBsvs(x)</code></pre>
+<p class="rd-p">Construct between subset variable (BSV)
+For a given key-value pair, get a BSV variable value by name (if present)</p>
 
 <h4>Arguments</h4>
 <dl class="rd-dl">
+  <dt>val</dt>
+  <dd class="rd-dd">a scalar character, numeric, or date</dd>
+  <dt>desc</dt>
+  <dd class="rd-dd">a character string describing the BSV</dd>
   <dt>x</dt>
   <dd class="rd-dd">a key-value pair or a value</dd>
+  <dt>name</dt>
+  <dd class="rd-dd">the name of the BSV to get
+d <- divide(iris, by = "Species",
+  bsvFn = function(x)
+    list(msl = bsv(mean(x$Sepal.Length))))
+getBsvs(d[[1]]$value)
+getBsv(d[[1]]$value, "msl")</dd>
 </dl>
 
+  <h4>Details</h4>
+
+  <p class="rd-p">Should be called inside the <code>bsvFn</code> argument to <code>divide</code> used for constructing a BSV list for each subset of a division.</p>
+
+
+
+
+<h4>See also</h4>
+
+<code><a href=#divide>divide</a></code>, <code><a href=#bsv>getBsvs</a></code>, <code><a href=#ddo-ddf-accessors>bsvInfo</a></code>
+
+
+<h4>Author</h4>
+
+Ryan Hafen
 
 
 
