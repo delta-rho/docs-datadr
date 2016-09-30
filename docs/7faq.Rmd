@@ -20,7 +20,7 @@ Simply send an email to
 
 ### What should I do if I have an issue or feature request?
 
-Please post an issue on [github](https://github.com/tesseradata/datadr/issues).
+Please post an issue on [github](https://github.com/delta-rho/datadr/issues).
 
 ### When should I consider using datadr?
 
@@ -83,7 +83,7 @@ Instead of making direct comparisons, I will try to point out some things that I
 - datadr leverages Hadoop, which is routinely used for extremely large data sets
 - datadr as an interface is extensible to other backends
 - datadr is not only a technology linking R to distributed computing backends, but an implementation of D&R, an *approach* to data analysis that has been used successfully for many analyses of large, complex data
-- datadr provides a backend to scalable detailed visualization of data using [trelliscope](http://tessera.io/docs-trelliscope/)
+- datadr provides a backend to scalable detailed visualization of data using [trelliscope](http://deltarho.org/docs-trelliscope/)
 
 ## R Code
 

@@ -2,11 +2,11 @@
 
 ## Background
 
-This tutorial covers an implementation of Divide and Recombine (D&R) in the R statistical programming environment, via an R package called `datadr`.  This is one component of the [Tessera](http://tessera.io) environment for the analysis of large complex data.
+This tutorial covers an implementation of Divide and Recombine (D&R) in the R statistical programming environment, via an R package called `datadr`.  This is one component of the [DeltaRho](http://deltarho.org) environment for the analysis of large complex data.
 
 The goal of D&R is to provide an environment for data analysts to carry out deep statistical analysis of large, complex data with as much ease and flexibility as is possible with small datasets.
 
-D&R is accomplished by dividing data into meaningful subsets, applying analytical methods to those subsets, and recombining the results.  Recombinations can be numerical or visual.  For visualization in the D&R framework, see [Trelliscope](http://github.com/tesseradata/trelliscope).
+D&R is accomplished by dividing data into meaningful subsets, applying analytical methods to those subsets, and recombining the results.  Recombinations can be numerical or visual.  For visualization in the D&R framework, see [Trelliscope](http://github.com/delta-rho/trelliscope).
 
 The diagram below is a visual representation of the D&R process.
 
@@ -19,13 +19,13 @@ For a given data set, which may be a collection of large csv files, an R data fr
 
 References:
 
-- [tessera.io](http://tessera.io)
+- [deltarho.org](http://deltarho.org)
 - [Large complex data: divide and recombine (D&R) with RHIPE. *Stat*, 1(1), 53-67](http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full)
 
 Related projects:
 
-- [RHIPE](http://github.com/tesseradata/RHIPE): the engine that makes D&R work for large datasets
-- [Trelliscope](http://github.com/tesseradata/trelliscope): the visualization companion to datadr
+- [RHIPE](http://github.com/delta-rho/RHIPE): the engine that makes D&R work for large datasets
+- [Trelliscope](http://github.com/delta-rho/trelliscope): the visualization companion to datadr
 
 
 ## Package Overview
@@ -88,7 +88,7 @@ First, we need to install the necessary components, `datadr` and `trelliscope`. 
 install.packages(c("datadr", "trelliscope"))
 ```
 
-The example we go through will be a small dataset that we can handle in a local R session, and therefore we only need to have these two packages installed.  For other installation options when dealing with larger data sets, see the [quickstart](http://tessera.io/#quickstart) on our website.
+The example we go through will be a small dataset that we can handle in a local R session, and therefore we only need to have these two packages installed.  For other installation options when dealing with larger data sets, see the [quickstart](http://deltarho.org/#quickstart) on our website.
 
 We will use as an example a data set consisting of the median list and sold price of homes in the United States, aggregated by county and month from 2008 to early 2014.  These data are available in a package called `housingData`.  To install this package:
 
@@ -233,7 +233,7 @@ str(byCountyGeo[[1]])
 
 ### Trelliscope display
 
-We have a more comprehensive tutorial for using [Trelliscope](http://tessera.io/docs-trelliscope/), but for completeness here and for some motivation to get through this tutorial and move on to the Trelliscope tutorial, we provide a simple example of taking a ddf and creating a Trelliscope display from it.
+We have a more comprehensive tutorial for using [Trelliscope](http://deltarho.org/docs-trelliscope/), but for completeness here and for some motivation to get through this tutorial and move on to the Trelliscope tutorial, we provide a simple example of taking a ddf and creating a Trelliscope display from it.
 
 In short, a Trelliscope display is like a Trellis display, or ggplot with faceting, or small multiple plot, or whatever you are used to calling the action of breaking a set of data into pieces and applying a plot to each piece and then arranging those plots in a grid and looking at them.  With Trelliscope, we are able to create such displays on data with a very large number of subsets and view them in an interactive and meaningful way.
 
@@ -242,7 +242,7 @@ In short, a Trelliscope display is like a Trellis display, or ggplot with faceti
 For a Trelliscope display, we must connect to a "visualization database" (VDB), which is a directory on our computer where we are going to organize all of the information about our displays (we create many over the course of an analysis).  Typically, we will set up a single VDB for each project we are working on.  We can do this with the `vdbConn()` function:
 
 ```{r quickstart_vdb, eval=FALSE, echo=TRUE, message=FALSE}
-vdbConn("vdb", name = "tesseraTutorial")
+vdbConn("vdb", name = "deltarhoTutorial")
 ```
 
 This connects to a directory called `"vdb"` relative to our current working directory.  R holds this connection in its global options so that subsequent calls will know where to put things without explicitly specifying the connection each time.
@@ -309,9 +309,9 @@ If you have been dutifully following along with this example in your own R conso
 view()
 ```
 
-If you have not been following along but are wondering what that `view()` command did, you can visit <a href="http://hafen.shinyapps.io/tesseraTutorial/" target="_blank">here</a> for an online version.  You will find a list of displays to choose from, of which the one with the name `list_sold_vs_time_datadr_tut` is the one we just created.  This brings up the point that you can share your Trelliscope displays online -- more about that as well as how to use the viewer will be covered in the Trelliscope tutorial -- but feel free to play around with the viewer.
+If you have not been following along but are wondering what that `view()` command did, you can visit <a href="http://hafen.shinyapps.io/deltarhoTutorial/" target="_blank">here</a> for an online version.  You will find a list of displays to choose from, of which the one with the name `list_sold_vs_time_datadr_tut` is the one we just created.  This brings up the point that you can share your Trelliscope displays online -- more about that as well as how to use the viewer will be covered in the Trelliscope tutorial -- but feel free to play around with the viewer.
 
-This covers the basics of `datadr` and a bit of `trelliscope`.  Hopefully you now feel comfortable enough to dive in and try some things out.  The remainder of this tutorial and the [Trelliscope](http://tessera.io/docs-trelliscope/) tutorial will provide greater detail.
+This covers the basics of `datadr` and a bit of `trelliscope`.  Hopefully you now feel comfortable enough to dive in and try some things out.  The remainder of this tutorial and the [Trelliscope](http://deltarho.org/docs-trelliscope/) tutorial will provide greater detail.
 
 ## For plyr / dplyr Users
 

@@ -1,23 +1,23 @@
-How to contribute to Tessera / docs-datadr
+How to contribute to DeltaRho / docs-datadr
 ==========================================
 
-Thank you for sharing your work with the Tessera project. We appreciate your contribution!
+Thank you for sharing your work with the DeltaRho project. We appreciate your contribution!
 
 ## Join the developer mailing list
 
-If you're not already on the Tessera developers list, take a minute to join.  This is as easy as sending an email to tessera-dev+subscribe@googlegroups.com.
+If you're not already on the DeltaRho developers list, take a minute to join.  This is as easy as sending an email to tessera-dev+subscribe@googlegroups.com.
 It would be great if you'd introduce yourself to the group but it's not required. You can just let your code do the talking for you if you like.
 
 ## Check the issue tracker
 
-Before you do too much work, check the [open issues in the docs-datadr issue tracker](https://github.com/tesseradata/docs-datadr/issues?state=open)
-to see if someone else has already filed an issue related to your work or is already working on it. If not, go ahead and 
-[open a new issue](https://github.com/tesseradata/docs-datadr/issues/new).
+Before you do too much work, check the [open issues in the docs-datadr issue tracker](https://github.com/delta-rho/docs-datadr/issues?state=open)
+to see if someone else has already filed an issue related to your work or is already working on it. If not, go ahead and
+[open a new issue](https://github.com/delta-rho/docs-datadr/issues/new).
 
 ## Announce your work on the mailing list
 
 Shoot us a quick email on the mailing list letting us know what you're working on. There
-will likely be people on the list who can give you tips about where to find relevant 
+will likely be people on the list who can give you tips about where to find relevant
 source or alert you to other planned changes that might effect your work.
 
 ## Tips for editing documentation

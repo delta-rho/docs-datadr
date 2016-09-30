@@ -344,7 +344,7 @@ counters(top5a)$map$mapTasks
 
 ## Large: HDFS / RHIPE
 
-Very large data sets can be stored on the Hadoop Distributed File System (HDFS).  For this to work, your workstation must be connected to a Hadoop cluster with RHIPE installed.  If you want to try these examples but do not have a Hadoop cluster, we are still using the same small data set and you can download our single-node Vagrant virtual machine -- instructions [here](http://tessera.io/#quickstart).
+Very large data sets can be stored on the Hadoop Distributed File System (HDFS).  For this to work, your workstation must be connected to a Hadoop cluster with RHIPE installed.  If you want to try these examples but do not have a Hadoop cluster, we are still using the same small data set and you can download our single-node Vagrant virtual machine -- instructions [here](http://deltarho.org/#quickstart).
 
 ### HDFS operations with RHIPE
 

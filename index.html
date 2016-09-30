@@ -5,8 +5,8 @@
   <meta name="generator" content="pandoc" />
 
     <meta name="author" content="Ryan Hafen" />
-  
-  
+
+
   <title>datadr</title>
 
     <script src="assets/jquery-1.11.3/jquery.min.js"></script>
@@ -22,17 +22,17 @@
   <link href="assets/packagedocs-0.0.1/pd.css" rel="stylesheet" />
   <script src="assets/packagedocs-0.0.1/pd.js"></script>
   <script src="assets/packagedocs-0.0.1/pd-collapse-toc.js"></script>
-  
-  
-  
-  
-  
+
+
+
+
+
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 </head>
 
 <body>
 
-  
+
   <header class="navbar navbar-white navbar-fixed-top" role="banner" id="header">
     <div class="container">
       <div class="navbar-header">
@@ -43,7 +43,7 @@
           <span class="icon-bar"></span>
         </button>
                 <span class="navbar-brand">
-<a href="http://tessera.io"> <img src='figures/icon.png' alt='tessera icon' width='30px' height='30px' style='margin-top: -3px;'> </a>
+<a href="http://deltarho.org"> <img src='figures/icon.png' alt='deltarho icon' width='30px' height='30px' style='margin-top: -3px;'> </a>
         </span>
                 <a href="index.html" class="navbar-brand page-scroll">
         datadr - Divide and Recombine in R
@@ -58,7 +58,7 @@
 <a href='rd.html'>Package Ref</a>
 </li>
 <li>
-<a href='https://github.com/tesseradata/datadr'>Github <i class='fa fa-github'></i></a>
+<a href='https://github.com/delta-rho/datadr'>Github <i class='fa fa-github'></i></a>
 </li>
         </ul>
       </nav>
@@ -120,15 +120,15 @@
         </div>
       </div>
       <div class="col-md-9" id="content-col">
-      
+
 <div id="content-top"></div>
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
 <div id="background" class="section level2">
 <h2>Background</h2>
-<p>This tutorial covers an implementation of Divide and Recombine (D&amp;R) in the R statistical programming environment, via an R package called <code>datadr</code>. This is one component of the <a href="http://tessera.io">Tessera</a> environment for the analysis of large complex data.</p>
+<p>This tutorial covers an implementation of Divide and Recombine (D&amp;R) in the R statistical programming environment, via an R package called <code>datadr</code>. This is one component of the <a href="http://deltarho.org">DeltaRho</a> environment for the analysis of large complex data.</p>
 <p>The goal of D&amp;R is to provide an environment for data analysts to carry out deep statistical analysis of large, complex data with as much ease and flexibility as is possible with small datasets.</p>
-<p>D&amp;R is accomplished by dividing data into meaningful subsets, applying analytical methods to those subsets, and recombining the results. Recombinations can be numerical or visual. For visualization in the D&amp;R framework, see <a href="http://github.com/tesseradata/trelliscope">Trelliscope</a>.</p>
+<p>D&amp;R is accomplished by dividing data into meaningful subsets, applying analytical methods to those subsets, and recombining the results. Recombinations can be numerical or visual. For visualization in the D&amp;R framework, see <a href="http://github.com/delta-rho/trelliscope">Trelliscope</a>.</p>
 <p>The diagram below is a visual representation of the D&amp;R process.</p>
 <p><img src="image/drdiagram.svg" width="650px" alt="drdiagram" style="display:block; margin:auto"/> <!-- ![drdiagram](image/drdiagram.png) --></p>
 <p>For a given data set, which may be a collection of large csv files, an R data frame, etc., we apply a division method that partitions the data in some way that is meaningful for the analysis we plan to perform. Often the partitioning is a logical choice based on the subject matter. After dividing the data, we attack the resulting partitioning with several visual and numerical methods, where we apply the method independently to each subset and combine the results. There are many forms of divisions and recombinations, many of which will be covered in this tutorial.</p>
@@ -136,13 +136,13 @@
 <h3>Reference</h3>
 <p>References:</p>
 <ul>
-<li><a href="http://tessera.io">tessera.io</a></li>
+<li><a href="http://deltarho.org">deltarho.org</a></li>
 <li><a href="http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full">Large complex data: divide and recombine (D&amp;R) with RHIPE. <em>Stat</em>, 1(1), 53-67</a></li>
 </ul>
 <p>Related projects:</p>
 <ul>
-<li><a href="http://github.com/tesseradata/RHIPE">RHIPE</a>: the engine that makes D&amp;R work for large datasets</li>
-<li><a href="http://github.com/tesseradata/trelliscope">Trelliscope</a>: the visualization companion to datadr</li>
+<li><a href="http://github.com/delta-rho/RHIPE">RHIPE</a>: the engine that makes D&amp;R work for large datasets</li>
+<li><a href="http://github.com/delta-rho/trelliscope">Trelliscope</a>: the visualization companion to datadr</li>
 </ul>
 </div>
 </div>
@@ -203,7 +203,7 @@
 <h3>Package installation</h3>
 <p>First, we need to install the necessary components, <code>datadr</code> and <code>trelliscope</code>. These are R packages that we install from CRAN.</p>
 <pre class="r"><code>install.packages(c(&quot;datadr&quot;, &quot;trelliscope&quot;))</code></pre>
-<p>The example we go through will be a small dataset that we can handle in a local R session, and therefore we only need to have these two packages installed. For other installation options when dealing with larger data sets, see the <a href="http://tessera.io/#quickstart">quickstart</a> on our website.</p>
+<p>The example we go through will be a small dataset that we can handle in a local R session, and therefore we only need to have these two packages installed. For other installation options when dealing with larger data sets, see the <a href="http://deltarho.org/#quickstart">quickstart</a> on our website.</p>
 <p>We will use as an example a data set consisting of the median list and sold price of homes in the United States, aggregated by county and month from 2008 to early 2014. These data are available in a package called <code>housingData</code>. To install this package:</p>
 <pre class="r"><code>install.packages(&quot;housingData&quot;)</code></pre>
 </div>
@@ -253,25 +253,25 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
 * Conditioning variables: county, state</code></pre>
 <p>We see there are 2883 counties, and we can access various attributes by calling methods such as <code>summary()</code>. The <code>update = TRUE</code> that we added to <code><a target='_blank' href='rd.html#divide'>divide()</a></code> provided some of these attributes. Let’s look at the summary:</p>
 <pre class="r"><code>summary(byCounty)</code></pre>
-<pre><code>        fips                 time                nSold        
- -------------------  ------------------  ------------------- 
-       levels : 2883  missing :        0   missing :   164370 
-      missing : 0         min : 08-10-01       min :       11 
- &gt; freqTable head &lt;       max : 14-03-01       max :    35619 
- 26077 : 140                                  mean : 274.6582 
- 51069 : 140                               std dev : 732.2429 
- 08019 : 139                              skewness :   10.338 
- 13311 : 139                              kurtosis : 222.8995 
- -------------------  ------------------  ------------------- 
-   medListPriceSqft     medSoldPriceSqft   
- --------------------  ------------------- 
-  missing :     48399   missing :   162770 
-      min : 0.5482456       min : 17.40891 
-      max :  1544.944       max : 1249.494 
-     mean :  96.72912      mean : 105.5659 
-  std dev :  56.12035   std dev : 69.40658 
- skewness :  6.816523  skewness : 5.610013 
- kurtosis :  94.06555  kurtosis : 60.48337 
+<pre><code>        fips                 time                nSold
+ -------------------  ------------------  -------------------
+       levels : 2883  missing :        0   missing :   164370
+      missing : 0         min : 08-10-01       min :       11
+ &gt; freqTable head &lt;       max : 14-03-01       max :    35619
+ 26077 : 140                                  mean : 274.6582
+ 51069 : 140                               std dev : 732.2429
+ 08019 : 139                              skewness :   10.338
+ 13311 : 139                              kurtosis : 222.8995
+ -------------------  ------------------  -------------------
+   medListPriceSqft     medSoldPriceSqft
+ --------------------  -------------------
+  missing :     48399   missing :   162770
+      min : 0.5482456       min : 17.40891
+      max :  1544.944       max : 1249.494
+     mean :  96.72912      mean : 105.5659
+  std dev :  56.12035   std dev : 69.40658
+ skewness :  6.816523  skewness : 5.610013
+ kurtosis :  94.06555  kurtosis : 60.48337
  --------------------  ------------------- </code></pre>
 <p>Since <code>datadr</code> knows that <code>byCounty</code> is a ddf, and because we set <code>update = TRUE</code>, after the division operation global summary statistics were computed for each of the variables.</p>
 <p>Suppose we want a more meaningful global summary, such as computing quantiles. <code>datadr</code> can do this in a division-independent way with <code><a target='_blank' href='rd.html#drquantile'>drQuantile()</a></code>. For example, let’s look at quantiles for the median list price and plot them using <code>xyplot()</code> from the <code>lattice</code> package:</p>
@@ -308,7 +308,7 @@ $value
 [1] &quot;county=Abbeville County|state=SC&quot;
 
 $value
-         time 
+         time
 -0.0002323686 </code></pre>
 <p>Now let’s recombine the slopes into a single data frame. This can be done with the <code><a target='_blank' href='rd.html#recombine'>recombine()</a></code> function, using the <code><a target='_blank' href='rd.html#combrbind'>combRbind</a></code> combiner, which is analagous to <code><a target='_blank' href='rd.html#rbind'>rbind()</a></code>:</p>
 <pre class="r"><code>countySlopes &lt;- recombine(byCountySlope, combRbind)</code></pre>
@@ -367,13 +367,13 @@ $value
 </div>
 <div id="trelliscope-display" class="section level3">
 <h3>Trelliscope display</h3>
-<p>We have a more comprehensive tutorial for using <a href="http://tessera.io/docs-trelliscope/">Trelliscope</a>, but for completeness here and for some motivation to get through this tutorial and move on to the Trelliscope tutorial, we provide a simple example of taking a ddf and creating a Trelliscope display from it.</p>
+<p>We have a more comprehensive tutorial for using <a href="http://deltarho.org/docs-trelliscope/">Trelliscope</a>, but for completeness here and for some motivation to get through this tutorial and move on to the Trelliscope tutorial, we provide a simple example of taking a ddf and creating a Trelliscope display from it.</p>
 <p>In short, a Trelliscope display is like a Trellis display, or ggplot with faceting, or small multiple plot, or whatever you are used to calling the action of breaking a set of data into pieces and applying a plot to each piece and then arranging those plots in a grid and looking at them. With Trelliscope, we are able to create such displays on data with a very large number of subsets and view them in an interactive and meaningful way.</p>
 </div>
 <div id="setting-up-a-visualization-database" class="section level3">
 <h3>Setting up a visualization database</h3>
 <p>For a Trelliscope display, we must connect to a “visualization database” (VDB), which is a directory on our computer where we are going to organize all of the information about our displays (we create many over the course of an analysis). Typically, we will set up a single VDB for each project we are working on. We can do this with the <code>vdbConn()</code> function:</p>
-<pre class="r"><code>vdbConn(&quot;vdb&quot;, name = &quot;tesseraTutorial&quot;)</code></pre>
+<pre class="r"><code>vdbConn(&quot;vdb&quot;, name = &quot;deltarhoTutorial&quot;)</code></pre>
 <p>This connects to a directory called <code>&quot;vdb&quot;</code> relative to our current working directory. R holds this connection in its global options so that subsequent calls will know where to put things without explicitly specifying the connection each time.</p>
 </div>
 <div id="creating-a-panel-function" class="section level3">
@@ -402,8 +402,8 @@ $value
 <p>We should test the cognostics function on a subset:</p>
 <pre class="r"><code>priceCog(byCounty[[1]]$value)</code></pre>
 <pre><code>$slope
-         time 
--0.0002323686 
+         time
+-0.0002323686
 
 $meanList
 [1] 72.76927
@@ -426,8 +426,8 @@ $nObs
   lims = list(x = &quot;same&quot;))</code></pre>
 <p>If you have been dutifully following along with this example in your own R console, you can now view the display with the following:</p>
 <pre class="r"><code>view()</code></pre>
-<p>If you have not been following along but are wondering what that <code>view()</code> command did, you can visit <a href="http://hafen.shinyapps.io/tesseraTutorial/" target="_blank">here</a> for an online version. You will find a list of displays to choose from, of which the one with the name <code>list_sold_vs_time_datadr_tut</code> is the one we just created. This brings up the point that you can share your Trelliscope displays online – more about that as well as how to use the viewer will be covered in the Trelliscope tutorial – but feel free to play around with the viewer.</p>
-<p>This covers the basics of <code>datadr</code> and a bit of <code>trelliscope</code>. Hopefully you now feel comfortable enough to dive in and try some things out. The remainder of this tutorial and the <a href="http://tessera.io/docs-trelliscope/">Trelliscope</a> tutorial will provide greater detail.</p>
+<p>If you have not been following along but are wondering what that <code>view()</code> command did, you can visit <a href="http://hafen.shinyapps.io/deltarhoTutorial/" target="_blank">here</a> for an online version. You will find a list of displays to choose from, of which the one with the name <code>list_sold_vs_time_datadr_tut</code> is the one we just created. This brings up the point that you can share your Trelliscope displays online – more about that as well as how to use the viewer will be covered in the Trelliscope tutorial – but feel free to play around with the viewer.</p>
+<p>This covers the basics of <code>datadr</code> and a bit of <code>trelliscope</code>. Hopefully you now feel comfortable enough to dive in and try some things out. The remainder of this tutorial and the <a href="http://deltarho.org/docs-trelliscope/">Trelliscope</a> tutorial will provide greater detail.</p>
 </div>
 </div>
 <div id="for-plyr-dplyr-users" class="section level2">
@@ -798,25 +798,25 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
 <p>Summaries can be accessed by:</p>
 <pre class="r"><code># look at irisDdf summary stats
 summary(irisDdf)</code></pre>
-<pre><code>     Sepal.Length          Sepal.Width           Petal.Length      
- --------------------  --------------------  --------------------- 
-  missing :         0   missing :         0   missing :          0 
-      min :       4.3       min :         2       min :          1 
-      max :       7.9       max :       4.4       max :        6.9 
-     mean :  5.843333      mean :  3.057333      mean :      3.758 
-  std dev : 0.8280661   std dev : 0.4358663   std dev :   1.765298 
- skewness : 0.3117531  skewness : 0.3157671  skewness : -0.2721277 
- kurtosis :  2.426432  kurtosis :  3.180976  kurtosis :   1.604464 
- --------------------  --------------------  --------------------- 
-      Petal.Width            Species       
- ---------------------  ------------------ 
-  missing :          0        levels : 3   
-      min :        0.1       missing : 0   
-      max :        2.5  &gt; freqTable head &lt; 
-     mean :   1.199333      setosa : 50    
-  std dev :  0.7622377  versicolor : 50    
- skewness : -0.1019342   virginica : 50    
- kurtosis :   1.663933                     
+<pre><code>     Sepal.Length          Sepal.Width           Petal.Length
+ --------------------  --------------------  ---------------------
+  missing :         0   missing :         0   missing :          0
+      min :       4.3       min :         2       min :          1
+      max :       7.9       max :       4.4       max :        6.9
+     mean :  5.843333      mean :  3.057333      mean :      3.758
+  std dev : 0.8280661   std dev : 0.4358663   std dev :   1.765298
+ skewness : 0.3117531  skewness : 0.3157671  skewness : -0.2721277
+ kurtosis :  2.426432  kurtosis :  3.180976  kurtosis :   1.604464
+ --------------------  --------------------  ---------------------
+      Petal.Width            Species
+ ---------------------  ------------------
+  missing :          0        levels : 3
+      min :        0.1       missing : 0
+      max :        2.5  &gt; freqTable head &lt;
+     mean :   1.199333      setosa : 50
+  std dev :  0.7622377  versicolor : 50
+ skewness : -0.1019342   virginica : 50
+ kurtosis :   1.663933
  ---------------------  ------------------ </code></pre>
 <p>For categorical variables, the top four values and their frequency is printed. To access the values themselves, we can do, for example:</p>
 <pre class="r"><code>summary(irisDdf)$Sepal.Length$stats</code></pre>
@@ -846,7 +846,7 @@ $kurtosis
 <pre class="r"><code>ncol(irisDdf)</code></pre>
 <pre><code>5</code></pre>
 <pre class="r"><code>names(irisDdf)</code></pre>
-<pre><code>[1] &quot;Sepal.Length&quot; &quot;Sepal.Width&quot;  &quot;Petal.Length&quot; &quot;Petal.Width&quot; 
+<pre><code>[1] &quot;Sepal.Length&quot; &quot;Sepal.Width&quot;  &quot;Petal.Length&quot; &quot;Petal.Width&quot;
 [5] &quot;Species&quot;     </code></pre>
 <p>However, datadr does not go too far beyond this in terms of making a ddf feel or behave exactly like a regular R data frame.</p>
 </div>
@@ -1068,7 +1068,7 @@ In the future, we will add the capability to sample the data with respect to [be
 </div>
 <div id="division" class="section level2">
 <h2>Division</h2>
-<p>Division is achieved through the <code><a target='_blank' href='rd.html#divide'>divide()</a></code> method. The function documentation is available <a href="http://tessera.io/docs-datadr/functionref.html#recombine">here</a>.</p>
+<p>Division is achieved through the <code><a target='_blank' href='rd.html#divide'>divide()</a></code> method. The function documentation is available <a href="http://deltarho.org/docs-datadr/functionref.html#recombine">here</a>.</p>
 <p>Currently there are two types of divisions supported: <em>conditioning variable</em>, and <em>random replicate</em>. In this section we discuss the major arguments to <code><a target='_blank' href='rd.html#divide'>divide()</a></code>, the most important of which is <code>by</code>.</p>
 <div id="conditioning-variable-division" class="section level3">
 <h3>Conditioning variable division</h3>
@@ -1292,7 +1292,7 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
 </div>
 <div id="recombination" class="section level2">
 <h2>Recombination</h2>
-<p>In this section we cover basic usage of the <code><a target='_blank' href='rd.html#recombine'>recombine()</a></code> method. The function documentation is available <a href="http://tessera.io/docs-datadr/functionref.html#recombine">here</a>.</p>
+<p>In this section we cover basic usage of the <code><a target='_blank' href='rd.html#recombine'>recombine()</a></code> method. The function documentation is available <a href="http://deltarho.org/docs-datadr/functionref.html#recombine">here</a>.</p>
 <p>We will show some examples on the iris data divided by species.</p>
 <pre class="r"><code>irisDdf &lt;- ddf(iris)
 bySpecies &lt;- divide(irisDdf, by = &quot;Species&quot;, update = TRUE)</code></pre>
@@ -1409,9 +1409,9 @@ Distributed data frame backed by &#39;kvMemory&#39; connection
 * Other attributes: getKeys(), splitSizeDistn(), splitRowDistn(), summary()</code></pre>
 <pre class="r"><code>#look at the names
 names(adultDdf)</code></pre>
-<pre><code> [1] &quot;age&quot;           &quot;workclass&quot;     &quot;fnlwgt&quot;        &quot;education&quot;    
- [5] &quot;educationnum&quot;  &quot;marital&quot;       &quot;occupation&quot;    &quot;relationship&quot; 
- [9] &quot;race&quot;          &quot;sex&quot;           &quot;capgain&quot;       &quot;caploss&quot;      
+<pre><code> [1] &quot;age&quot;           &quot;workclass&quot;     &quot;fnlwgt&quot;        &quot;education&quot;
+ [5] &quot;educationnum&quot;  &quot;marital&quot;       &quot;occupation&quot;    &quot;relationship&quot;
+ [9] &quot;race&quot;          &quot;sex&quot;           &quot;capgain&quot;       &quot;caploss&quot;
 [13] &quot;hoursperweek&quot;  &quot;nativecountry&quot; &quot;income&quot;        &quot;incomebin&quot;    </code></pre>
 <p>We see that there are about 32K observations, and we see the various variables available.</p>
 <p>We’ll start with some simple exploratory analysis. One variable of interest in the data is education. We can look at the summary statistics to see the frequency distribution of <code>education</code> (which were computed since we specified <code>update = TRUE</code> when we created <code>adultDdf</code>):</p>
@@ -1531,7 +1531,7 @@ sexRatio$edGroup &lt;- with(sexRatio, reorder(edGroup, maleFemaleRatio, mean))
 dotplot(edGroup ~ maleFemaleRatio, data = sexRatio)</code></pre>
 <p><img src="index_files/figure-html/vis_sexratio-1.png" title="" alt="" width="624" /></p>
 <p>We know the marginal distribution of gender is lopsided to begin with (see <code>summary(byEdGroup)$sex</code>), but we don’t know if the sample we are dealing with is biased or not… There are obviously many many directions to go with the exploratory analysis and hopefully these few examples provide a start and a feel for how to go about</p>
-<p>One more thing to note about what we have done so far: We have shown a couple of examples of using datadr to summarize the data in different ways and visualize the summaries. This is a good thing to do. But we also want to be able to visualize the subsets in detail. For example, we might want to look at a <code>scatterplot</code> of <code>age</code> vs. <code>hoursperweek</code>. With this small data set, we obviously can pull all subsets in and make a lattice plot or faceted ggplot. However, what if there are thousands or hundreds of thousands of subsets? This is where the <a href="http://tessera.io/docs-trelliscope/">trelliscope</a> package – a visualization companion to datadr – comes in.</p>
+<p>One more thing to note about what we have done so far: We have shown a couple of examples of using datadr to summarize the data in different ways and visualize the summaries. This is a good thing to do. But we also want to be able to visualize the subsets in detail. For example, we might want to look at a <code>scatterplot</code> of <code>age</code> vs. <code>hoursperweek</code>. With this small data set, we obviously can pull all subsets in and make a lattice plot or faceted ggplot. However, what if there are thousands or hundreds of thousands of subsets? This is where the <a href="http://deltarho.org/docs-trelliscope/">trelliscope</a> package – a visualization companion to datadr – comes in.</p>
 </div>
 <div id="fitting-a-glm-to-the-data" class="section level3">
 <h3>Fitting a GLM to the data</h3>
@@ -1565,7 +1565,7 @@ length(which(tmp == adult$income)) / nrow(adult) -->
   drGLM(incomebin ~ educationnum + hoursperweek + sex,
     data = x, family = binomial()))
 recombine(adultGlm, combMeanCoef)</code></pre>
-<pre><code> (Intercept) educationnum hoursperweek      sexMale 
+<pre><code> (Intercept) educationnum hoursperweek      sexMale
   -7.2843697    0.3596912    0.0333105    1.2218422 </code></pre>
 <p>If we compare the result to the all-data estimate, the values are close. However, with this approach, we do not get any inference about the estimates.</p>
 </div>
@@ -2186,7 +2186,7 @@ irisDiskConn</code></pre>
 <pre class="r"><code>addData(irisDiskConn, irisKV[1:2])</code></pre>
 <p>Here we added the first 2 key-value pairs to disk. We can verify this by looking in the directory:</p>
 <pre class="r"><code>list.files(irisDiskConn$loc)</code></pre>
-<pre><code>[1] &quot;_meta&quot;                                 
+<pre><code>[1] &quot;_meta&quot;
 [2] &quot;07abaecdababc84098369b43ae953523.Rdata&quot;
 [3] &quot;b1f1dba2f126bc3208b6b84121503757.Rdata&quot;</code></pre>
 <p><code>&quot;_meta&quot;</code> is a directory where the connection metadata is stored. The two <code>.Rdata</code> files are the two key-value pairs we just added. The file name is determined by the md5 hash of the data in the key (and we don’t have to worry about this).</p>
@@ -2360,7 +2360,7 @@ counters(top5a)$map$mapTasks</code></pre>
 </div>
 <div id="large-hdfs-rhipe" class="section level2">
 <h2>Large: HDFS / RHIPE</h2>
-<p>Very large data sets can be stored on the Hadoop Distributed File System (HDFS). For this to work, your workstation must be connected to a Hadoop cluster with RHIPE installed. If you want to try these examples but do not have a Hadoop cluster, we are still using the same small data set and you can download our single-node Vagrant virtual machine – instructions <a href="http://tessera.io/#quickstart">here</a>.</p>
+<p>Very large data sets can be stored on the Hadoop Distributed File System (HDFS). For this to work, your workstation must be connected to a Hadoop cluster with RHIPE installed. If you want to try these examples but do not have a Hadoop cluster, we are still using the same small data set and you can download our single-node Vagrant virtual machine – instructions <a href="http://deltarho.org/#quickstart">here</a>.</p>
 <div id="hdfs-operations-with-rhipe" class="section level3">
 <h3>HDFS operations with RHIPE</h3>
 <p>Getting ready for dealing with data in Hadoop can require some Hadoop file system operations. Here is a quick crash course on the available functions for interacting with HDFS from R using RHIPE.</p>
@@ -2570,16 +2570,16 @@ system(paste(&quot;head&quot;, csvFile))</code></pre>
 irisConn &lt;- localDiskConn(file.path(tempdir(), &quot;iris&quot;), autoYes = TRUE)
 # read in iris data
 irisData &lt;- drRead.csv(csvFile, rowsPerBlock = 20, output = irisConn)</code></pre>
-<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpVe7Twt/iris.csv 
-  Processing chunk  1 
-  Processing chunk  2 
-  Processing chunk  3 
-  Processing chunk  4 
-  Processing chunk  5 
-  Processing chunk  6 
-  Processing chunk  7 
-  Processing chunk  8 
-  Processing chunk  9 
+<pre><code>-- In file  /private/var/folders/n4/6ztyqms165s3r_4n001n1y6m0000gn/T/RtmpVe7Twt/iris.csv
+  Processing chunk  1
+  Processing chunk  2
+  Processing chunk  3
+  Processing chunk  4
+  Processing chunk  5
+  Processing chunk  6
+  Processing chunk  7
+  Processing chunk  8
+  Processing chunk  9
   * End of file - no data for chunk  9 </code></pre>
 <pre class="r"><code># look at resulting object
 irisData</code></pre>
@@ -2633,7 +2633,7 @@ $value
 </div>
 <div id="what-should-i-do-if-i-have-an-issue-or-feature-request" class="section level3">
 <h3>What should I do if I have an issue or feature request?</h3>
-<p>Please post an issue on <a href="https://github.com/tesseradata/datadr/issues">github</a>.</p>
+<p>Please post an issue on <a href="https://github.com/delta-rho/datadr/issues">github</a>.</p>
 </div>
 <div id="when-should-i-consider-using-datadr" class="section level3">
 <h3>When should I consider using datadr?</h3>
@@ -2689,7 +2689,7 @@ $value
 <li>datadr leverages Hadoop, which is routinely used for extremely large data sets</li>
 <li>datadr as an interface is extensible to other backends</li>
 <li>datadr is not only a technology linking R to distributed computing backends, but an implementation of D&amp;R, an <em>approach</em> to data analysis that has been used successfully for many analyses of large, complex data</li>
-<li>datadr provides a backend to scalable detailed visualization of data using <a href="http://tessera.io/docs-trelliscope/">trelliscope</a></li>
+<li>datadr provides a backend to scalable detailed visualization of data using <a href="http://deltarho.org/docs-trelliscope/">trelliscope</a></li>
 </ul>
 </div>
 </div>
@@ -2722,6 +2722,6 @@ $value
     </div>
   </div>
 
-  
+
 </body>
 </html>

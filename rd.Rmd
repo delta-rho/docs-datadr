@@ -10,10 +10,10 @@ rd_page: true
 navpills: |
   <li><a href='index.html'>Docs</a></li>
   <li class="active"><a href='rd.html'>Package Ref</a></li>
-  <li><a href='https://github.com/tesseradata/datadr'>Github <i class='fa fa-github'></i></a></li>
+  <li><a href='https://github.com/delta-rho/datadr'>Github <i class='fa fa-github'></i></a></li>
 brand: |-
-  <a href="http://tessera.io">
-  <img src='figures/icon.png' alt='tessera icon' width='30px' height='30px' style='margin-top: -3px;'>
+  <a href="http://deltarho.org">
+  <img src='figures/icon.png' alt='deltarho icon' width='30px' height='30px' style='margin-top: -3px;'>
   </a>
 ---
 <h1>Divide and Recombine for Large, Complex Data</h1>
@@ -1497,7 +1497,7 @@ an object of class "ddf" if the resulting subsets are data frames.  Otherwise, a
   <h4>References</h4>
 
   <p class="rd-p"><ul>
-<li> <a href = http://tessera.io>http://tessera.io</a>
+<li> <a href = http://deltarho.org>http://deltarho.org</a>
  </li>
 <li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
@@ -1579,7 +1579,7 @@ a list to be used for the "by" argument to <code><a href=#divide>divide</a></cod
   <h4>References</h4>
 
   <p class="rd-p"><ul>
-<li> <a href = http://tessera.io>http://tessera.io</a>
+<li> <a href = http://deltarho.org>http://deltarho.org</a>
  </li>
 <li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
@@ -1638,7 +1638,7 @@ a list to be used for the "by" argument to <code><a href=#divide>divide</a></cod
   <h4>References</h4>
 
   <p class="rd-p"><ul>
-<li> <a href = http://tessera.io>http://tessera.io</a>
+<li> <a href = http://deltarho.org>http://deltarho.org</a>
  </li>
 <li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>
@@ -2004,7 +2004,7 @@ Depends on <code>combine</code>: this could be a distributed data object, a data
   <h4>References</h4>
 
   <p class="rd-p"><ul>
-<li> <a href = http://tessera.io>http://tessera.io</a>
+<li> <a href = http://deltarho.org>http://deltarho.org</a>
  </li>
 <li> <a href = http://onlinelibrary.wiley.com/doi/10.1002/sta4.7/full>Guha, S., Hafen, R., Rounds, J., Xia, J., Li, J., Xi, B., & Cleveland, W. S. (2012). Large complex data: divide and recombine (D&R) with RHIPE. <em>Stat</em>, 1(1), 53-67.</a>
 </li>

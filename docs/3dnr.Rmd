@@ -11,7 +11,7 @@ datadr provides a high-level language for D&R that simply consists of functions 
 
 ## Division
 
-Division is achieved through the `r rdl("divide()")` method.  The function documentation is available [here](http://tessera.io/docs-datadr/functionref.html#recombine).
+Division is achieved through the `r rdl("divide()")` method.  The function documentation is available [here](http://deltarho.org/docs-datadr/functionref.html#recombine).
 
 Currently there are two types of divisions supported: *conditioning variable*, and *random replicate*.  In this section we discuss the major arguments to `r rdl("divide()")`, the most important of which is `by`.
 
@@ -196,7 +196,7 @@ Note that the filter is applied to the data prior to the application of `postTra
 
 ## Recombination
 
-In this section we cover basic usage of the `r rdl("recombine()")` method.  The function documentation is available [here](http://tessera.io/docs-datadr/functionref.html#recombine).
+In this section we cover basic usage of the `r rdl("recombine()")` method.  The function documentation is available [here](http://deltarho.org/docs-datadr/functionref.html#recombine).
 
 We will show some examples on the iris data divided by species.
 
@@ -376,7 +376,7 @@ dotplot(edGroup ~ maleFemaleRatio, data = sexRatio)
 
 We know the marginal distribution of gender is lopsided to begin with (see `summary(byEdGroup)$sex`), but we don't know if the sample we are dealing with is biased or not...  There are obviously many many directions to go with the exploratory analysis and hopefully these few examples provide a start and a feel for how to go about
 
-One more thing to note about what we have done so far:  We have shown a couple of examples of using datadr to summarize the data in different ways and visualize the summaries.  This is a good thing to do.  But we also want to be able to visualize the subsets in detail.  For example, we might want to look at a `scatterplot` of `age` vs. `hoursperweek`.  With this small data set, we obviously can pull all subsets in and make a lattice plot or faceted ggplot.  However, what if there are thousands or hundreds of thousands of subsets?  This is where the [trelliscope](http://tessera.io/docs-trelliscope/) package -- a visualization companion to datadr -- comes in.
+One more thing to note about what we have done so far:  We have shown a couple of examples of using datadr to summarize the data in different ways and visualize the summaries.  This is a good thing to do.  But we also want to be able to visualize the subsets in detail.  For example, we might want to look at a `scatterplot` of `age` vs. `hoursperweek`.  With this small data set, we obviously can pull all subsets in and make a lattice plot or faceted ggplot.  However, what if there are thousands or hundreds of thousands of subsets?  This is where the [trelliscope](http://deltarho.org/docs-trelliscope/) package -- a visualization companion to datadr -- comes in.
 
 ### Fitting a GLM to the data
 
